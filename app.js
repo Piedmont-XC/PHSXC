@@ -1,6 +1,6 @@
-// PHSXC Summer Training App v9
-// Google Sheet loader with better Google Visualization JSONP URL format + visible diagnostics.
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTX0uda5WO10ZER3Qg-U_160YEfSaPVqP93DwWPlMnQ-YKws-dhgvQVRC_mjQExz5EW3XTXqh7Wq4eW/pubhtml?gid=19411364&single=true";
+// PHSXC Summer Training App v10
+// Google Sheet is loaded through a Google Apps Script web app bridge.
+const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxrZU9YRCoi1giUkmyski0VrBzKpI1Tfrk--TYInwjK48yo7SCaT0I66mHbuW1Tc0Fp/exec";
 
 const FALLBACK_WORKOUTS = [
   { Date: "2026-06-01", Sophomore: "30 min easy + mobility", Junior: "35 min easy + mobility", Senior: "40–45 min easy + mobility", Notes: "Start relaxed. This is not a fitness test." },
@@ -14,7 +14,7 @@ const FALLBACK_WORKOUTS = [
 
 let workouts = FALLBACK_WORKOUTS;
 let selectedGroup = localStorage.getItem("phsxcGroup") || "Sophomore";
-let dataSourceLabel = GOOGLE_SHEET_CSV_URL ? "Google Sheet loading…" : "sample data";
+let dataSourceLabel = GOOGLE_APPS_SCRIPT_URL ? "Google Sheet loading…" : "sample data";
 let loadDiagnostic = "";
 
 const datePicker = document.getElementById("datePicker");
@@ -44,6 +44,7 @@ function normalizeHeader(header) {
 
 function normalizeDate(value) {
   if (value instanceof Date && !Number.isNaN(value.getTime())) return localISODate(value);
+
   const raw = String(value || "").trim();
   if (!raw) return "";
 
@@ -66,17 +67,30 @@ function normalizeDate(value) {
 
   const parsed = new Date(raw);
   if (!Number.isNaN(parsed.getTime())) return localISODate(parsed);
+
   return raw;
+}
+
+function escapeHTML(str) {
+  return String(str || "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  }[char]));
 }
 
 function findWorkout(iso) {
   return workouts.find(row => normalizeDate(row.Date) === iso);
 }
 
-function escapeHTML(str) {
-  return String(str || "").replace(/[&<>"']/g, char => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
-  }[char]));
+function chooseInitialDate() {
+  const today = localISODate();
+  const first = workouts.length ? normalizeDate(workouts[0].Date) : "2026-06-01";
+  const last = workouts.length ? normalizeDate(workouts[workouts.length - 1].Date) : first;
+  if (today >= first && today <= last) return today;
+  return first;
 }
 
 function render() {
@@ -108,7 +122,7 @@ function render() {
   }
 
   const workout = row[selectedGroup] || "No workout entered for this group.";
-  const notes = row.Notes || "";
+  const notes = row.Notes || row["Coach Notes"] || "";
 
   workoutBody.innerHTML = `
     <p class="main">${escapeHTML(workout)}</p>
@@ -118,14 +132,6 @@ function render() {
   `;
 }
 
-function chooseInitialDate() {
-  const today = localISODate();
-  const first = workouts.length ? normalizeDate(workouts[0].Date) : "2026-06-01";
-  const last = workouts.length ? normalizeDate(workouts[workouts.length - 1].Date) : first;
-  if (today >= first && today <= last) return today;
-  return first;
-}
-
 function shiftDay(days) {
   const current = parseISODateAsLocal(datePicker.value || chooseInitialDate());
   current.setDate(current.getDate() + days);
@@ -133,59 +139,34 @@ function shiftDay(days) {
   render();
 }
 
-function rowsToObjects(headers, rows) {
-  return rows
-    .filter(row => row.some(cell => String(cell || "").trim() !== ""))
-    .map(row => {
-      const obj = {};
-      headers.forEach((h, i) => {
-        const normalized = normalizeHeader(h);
-        let key = h || `Column${i + 1}`;
+function normalizeWorkoutRow(row) {
+  const normalized = {
+    Date: row.Date || row.date || "",
+    Sophomore: row.Sophomore || row.Sophomores || row.sophomore || "",
+    Junior: row.Junior || row.Juniors || row.junior || "",
+    Senior: row.Senior || row.Seniors || row.senior || "",
+    Notes: row.Notes || row["Coach Notes"] || row.Note || row.notes || ""
+  };
 
-        if (normalized === "date") key = "Date";
-        if (normalized === "sophomore" || normalized === "sophomores") key = "Sophomore";
-        if (normalized === "junior" || normalized === "juniors") key = "Junior";
-        if (normalized === "senior" || normalized === "seniors") key = "Senior";
-        if (normalized === "notes" || normalized === "coachnotes" || normalized === "note") key = "Notes";
+  // Preserve extra useful fields for future use.
+  Object.keys(row).forEach(key => {
+    if (!(key in normalized)) normalized[key] = row[key];
+  });
 
-        obj[key] = String(row[i] ?? "").trim();
-      });
-      obj.Date = normalizeDate(obj.Date);
-      return obj;
-    });
+  normalized.Date = normalizeDate(normalized.Date);
+  return normalized;
 }
 
-function getPublishedSheetParts(url) {
-  const u = new URL(url);
-  const gid = u.searchParams.get("gid") || "0";
-  const match = u.href.match(/\/spreadsheets\/d\/e\/([^/]+)/);
-  if (!match) throw new Error("Could not find published sheet id after /d/e/");
-  const id = match[1];
-  return { id, gid };
-}
-
-function loadGoogleSheetViaJSONP(url) {
+function loadAppsScriptViaJSONP(url) {
   return new Promise((resolve, reject) => {
-    let parts;
-    try {
-      parts = getPublishedSheetParts(url);
-    } catch (err) {
-      reject(err);
-      return;
-    }
-
-    const callback = `phsxcSheetCallback_${Date.now()}`;
-    const gvizUrl =
-      `https://docs.google.com/spreadsheets/d/e/${parts.id}/gviz/tq` +
-      `?gid=${encodeURIComponent(parts.gid)}` +
-      `&headers=1` +
-      `&tq=${encodeURIComponent("select *")}` +
-      `&tqx=${encodeURIComponent(`out:json;responseHandler:${callback}`)}`;
+    const callback = `phsxcCallback_${Date.now()}`;
+    const joinChar = url.includes("?") ? "&" : "?";
+    const scriptUrl = `${url}${joinChar}callback=${encodeURIComponent(callback)}&v=${Date.now()}`;
 
     const script = document.createElement("script");
     const timeout = setTimeout(() => {
       cleanup();
-      reject(new Error("Google Sheet JSONP timed out. URL tried: " + gvizUrl));
+      reject(new Error("Apps Script timed out. URL tried: " + scriptUrl));
     }, 15000);
 
     function cleanup() {
@@ -196,24 +177,20 @@ function loadGoogleSheetViaJSONP(url) {
 
     window[callback] = function(response) {
       try {
-        if (response.status === "error") {
-          throw new Error(response.errors?.map(e => e.detailed_message || e.message).join("; ") || "Google returned error");
+        if (response && response.error) {
+          throw new Error(response.error);
         }
 
-        const table = response.table;
-        const headers = table.cols.map(col => col.label || col.id || "");
-        const rows = table.rows.map(row =>
-          row.c.map(cell => {
-            if (!cell) return "";
-            if (cell.f) return cell.f;
-            if (cell.v === null || cell.v === undefined) return "";
-            return String(cell.v);
-          })
-        );
+        const rows = Array.isArray(response) ? response : response.rows;
+        if (!Array.isArray(rows)) {
+          throw new Error("Apps Script did not return an array of workout rows.");
+        }
 
-        const parsed = rowsToObjects(headers, rows);
+        const parsed = rows
+          .map(normalizeWorkoutRow)
+          .filter(row => row.Date || row.Sophomore || row.Junior || row.Senior);
+
         cleanup();
-        loadDiagnostic = `Loaded ${parsed.length} rows from Google Sheet.`;
         resolve(parsed);
       } catch (err) {
         cleanup();
@@ -223,33 +200,34 @@ function loadGoogleSheetViaJSONP(url) {
 
     script.onerror = function() {
       cleanup();
-      reject(new Error("Google Sheet JSONP script failed to load. URL tried: " + gvizUrl));
+      reject(new Error("Apps Script JSONP script failed to load. URL tried: " + scriptUrl));
     };
 
-    script.src = gvizUrl;
+    script.src = scriptUrl;
     document.body.appendChild(script);
   });
 }
 
 async function loadSheetData() {
-  if (!GOOGLE_SHEET_CSV_URL || GOOGLE_SHEET_CSV_URL.includes("...")) {
-    dataSourceLabel = "sample data — Google Sheet URL not connected yet";
+  if (!GOOGLE_APPS_SCRIPT_URL || GOOGLE_APPS_SCRIPT_URL.includes("...")) {
+    dataSourceLabel = "sample data — Apps Script URL not connected yet";
     workouts = FALLBACK_WORKOUTS;
     return;
   }
 
   try {
-    const parsed = await loadGoogleSheetViaJSONP(GOOGLE_SHEET_CSV_URL);
+    const parsed = await loadAppsScriptViaJSONP(GOOGLE_APPS_SCRIPT_URL);
 
-    if (!parsed.length) throw new Error("Sheet returned no workout rows");
-    if (!parsed[0].Date) throw new Error("Sheet missing Date column. Headers found may not be in row 1.");
+    if (!parsed.length) throw new Error("Apps Script returned no workout rows");
+    if (!parsed[0].Date) throw new Error("Apps Script rows are missing Date values");
 
     workouts = parsed;
-    dataSourceLabel = "Google Sheet";
+    dataSourceLabel = "Google Sheet via Apps Script";
+    loadDiagnostic = `Loaded ${parsed.length} rows.`;
   } catch (err) {
-    console.error("Google Sheet load failed:", err);
+    console.error("Apps Script load failed:", err);
     loadDiagnostic = err.message || String(err);
-    dataSourceLabel = "sample data — Google Sheet could not be loaded";
+    dataSourceLabel = "sample data — Apps Script could not be loaded";
     workouts = FALLBACK_WORKOUTS;
   }
 }
