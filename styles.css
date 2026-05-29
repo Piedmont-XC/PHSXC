@@ -173,3 +173,48 @@ footer {
   .workout-head { flex-direction: column; }
   input[type="date"] { width: 100%; }
 }
+
+
+.weight-room-card {
+  background: #f8fbff;
+}
+
+.schedule-days {
+  font-weight: 800;
+  color: var(--brand);
+  margin-bottom: 12px;
+}
+
+.schedule-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.schedule-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: white;
+}
+
+.schedule-label {
+  font-weight: 800;
+}
+
+.schedule-time {
+  font-weight: 900;
+  color: var(--brand);
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .schedule-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+}
