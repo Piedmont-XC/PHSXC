@@ -1,0 +1,130 @@
+/**
+ * PHSXC Apps Script v11
+ *
+ * This script does two jobs:
+ * 1. Serves workout data from the "Master Plan" tab to the GitHub Pages app.
+ * 2. Receives athlete workout-log submissions and appends them to "Workout Log".
+ *
+ * Deploy as:
+ * - Web app
+ * - Execute as: Me
+ * - Who has access: Anyone
+ */
+
+function doGet(e) {
+  const action = (e.parameter.action || "workouts").toLowerCase();
+
+  if (action === "log") {
+    return handleWorkoutLog(e);
+  }
+
+  return handleWorkoutData(e);
+}
+
+function handleWorkoutData(e) {
+  const sheetName = "Master Plan"; // Change if your workout tab has a different name.
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(sheetName);
+  const callback = e.parameter.callback || "phsxcCallback";
+
+  if (!sheet) {
+    return jsonp(callback, {
+      error: "Sheet tab not found: " + sheetName
+    });
+  }
+
+  const values = sheet.getDataRange().getDisplayValues();
+  if (values.length < 2) {
+    return jsonp(callback, []);
+  }
+
+  const headers = values[0];
+  const rows = values.slice(1)
+    .filter(row => row.some(cell => String(cell).trim() !== ""))
+    .map(row => {
+      const obj = {};
+      headers.forEach((header, i) => {
+        obj[header] = row[i];
+      });
+
+      obj.Notes = obj["Coach Notes"] || obj["Notes"] || "";
+      obj.Date = obj["Date"] || "";
+      obj.Sophomore = obj["Sophomore"] || "";
+      obj.Junior = obj["Junior"] || "";
+      obj.Senior = obj["Senior"] || "";
+
+      return obj;
+    });
+
+  return jsonp(callback, rows);
+}
+
+function handleWorkoutLog(e) {
+  const callback = e.parameter.callback || "phsxcLogCallback";
+  const payloadText = e.parameter.payload;
+
+  if (!payloadText) {
+    return jsonp(callback, {
+      ok: false,
+      error: "Missing payload."
+    });
+  }
+
+  let payload;
+  try {
+    payload = JSON.parse(payloadText);
+  } catch (err) {
+    return jsonp(callback, {
+      ok: false,
+      error: "Could not parse payload."
+    });
+  }
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetName = "Workout Log";
+  let sheet = ss.getSheetByName(sheetName);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+    sheet.appendRow([
+      "Timestamp",
+      "Date",
+      "Name",
+      "Group",
+      "Time Run",
+      "Distance Run",
+      "Perceived Effort",
+      "How Did You Feel",
+      "Strength Training?",
+      "Strength Exercises",
+      "Notes",
+      "Planned Workout"
+    ]);
+  }
+
+  sheet.appendRow([
+    new Date(),
+    payload.date || "",
+    payload.name || "",
+    payload.group || "",
+    payload.timeRun || "",
+    payload.distanceRun || "",
+    payload.effort || "",
+    payload.feel || "",
+    payload.strength || "",
+    Array.isArray(payload.exercises) ? payload.exercises.join(", ") : (payload.exercises || ""),
+    payload.notes || "",
+    payload.plannedWorkout || ""
+  ]);
+
+  return jsonp(callback, {
+    ok: true
+  });
+}
+
+function jsonp(callback, data) {
+  const safeCallback = String(callback || "callback").replace(/[^\w.$]/g, "");
+  return ContentService
+    .createTextOutput(safeCallback + "(" + JSON.stringify(data) + ");")
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
+}

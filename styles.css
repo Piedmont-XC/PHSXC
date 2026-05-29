@@ -395,3 +395,159 @@ input[type="date"],
     height: 18px;
   }
 }
+
+
+/* Workout log v11 */
+.primary-action,
+.back-link {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 14px 16px;
+  font-weight: 900;
+}
+
+.primary-action {
+  margin-top: 16px;
+  background: var(--brand);
+  color: white;
+  box-shadow: 0 8px 18px rgba(91, 42, 134, 0.18);
+}
+
+.back-link {
+  background: #f0e5fa;
+  color: var(--brand);
+}
+
+.log-form {
+  display: grid;
+  gap: 16px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field > span {
+  font-weight: 900;
+  color: var(--text);
+}
+
+.help-text {
+  margin: -4px 0 2px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 13px 12px;
+  font: inherit;
+  color: var(--text);
+  background: #ffffff;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.choice-btn,
+.toggle-btn {
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #f0e5fa;
+  color: var(--brand);
+  padding: 11px 13px;
+  font-weight: 850;
+}
+
+.choice-btn.selected,
+.toggle-btn.selected {
+  background: var(--brand);
+  color: #ffffff;
+  border-color: var(--brand);
+}
+
+.segmented .choice-btn {
+  flex: 1;
+}
+
+.wrap {
+  flex-wrap: wrap;
+}
+
+.effort-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.exercise-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.planned-box {
+  background: #fbf7ff;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 14px;
+}
+
+.planned-box p:last-child {
+  margin-bottom: 0;
+  font-weight: 800;
+}
+
+.submit-btn {
+  background: var(--brand);
+  color: white;
+  border-radius: 999px;
+  padding: 15px 18px;
+  font-weight: 950;
+  font-size: 1rem;
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+}
+
+.form-status {
+  min-height: 1.4em;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.form-status.success {
+  color: #276749;
+}
+
+.form-status.error {
+  color: #9b2c2c;
+}
+
+@media (max-width: 480px) {
+  .two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .effort-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .primary-action {
+    padding: 15px 16px;
+  }
+}

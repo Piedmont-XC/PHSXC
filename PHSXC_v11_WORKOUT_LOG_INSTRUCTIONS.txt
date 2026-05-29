@@ -1,0 +1,95 @@
+# PHSXC v11 Workout Log Update Instructions
+
+This update adds:
+
+- A "Log Today’s Workout" button on the main app page
+- A new `log.html` workout log page
+- A new `log.js` submit script
+- Name field
+- Date field with today/default context
+- Group selection
+- Time Run
+- Distance Run
+- Perceived Effort
+- How Did You Feel
+- Strength Training Yes/No
+- Tap-to-select strength exercises
+- Notes for Coach
+- Submission storage in your Google Sheet tab named `Workout Log`
+
+## 1. Update GitHub files
+
+Upload/replace these files at the ROOT of your GitHub `PHSXC` repo:
+
+- `index.html`
+- `styles.css`
+- `app.js`
+- `service-worker.js`
+- `log.html`  ← new file
+- `log.js`    ← new file
+
+Do not upload the enclosing folder. The files must be at the same level as your existing `index.html`.
+
+Then commit changes.
+
+## 2. Update Google Apps Script
+
+Open the Google Sheet.
+
+Go to:
+
+Extensions → Apps Script
+
+Replace the script code with the contents of:
+
+`PHSXC_Apps_Script_v11.gs.txt`
+
+Important:
+- The workout tab is assumed to be named `Master Plan`.
+- The log tab will be created automatically as `Workout Log` the first time someone submits.
+
+If your workout tab is not named `Master Plan`, change this line in Apps Script:
+
+const sheetName = "Master Plan";
+
+## 3. Deploy Apps Script
+
+After pasting the v11 Apps Script code:
+
+1. Click Deploy
+2. Click Manage deployments
+3. Edit your existing Web App deployment
+4. Choose New version
+5. Deploy
+6. Keep:
+   - Execute as: Me
+   - Who has access: Anyone
+
+Use the same `/exec` URL. You should not need a new GitHub patch as long as the URL stays the same.
+
+## 4. Test the app
+
+Open:
+
+https://stevezirkelbach.github.io/PHSXC/?v=11
+
+Then tap:
+
+Log Today’s Workout
+
+Submit a test entry.
+
+In your Google Sheet, look for a tab called:
+
+Workout Log
+
+You should see the test submission there.
+
+## 5. After testing
+
+Delete the test row from `Workout Log` if you want.
+
+## Notes
+
+The app remembers the athlete's name on that phone after the first entry using localStorage.
+It also remembers the selected group.

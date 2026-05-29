@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PHSXC Workout Log</title>
+  <meta name="description" content="PHSXC athlete workout log" />
+  <meta name="theme-color" content="#5b2a86" />
+  <link rel="stylesheet" href="styles.css?v=11" />
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">PHSXC</p>
+        <h1>Workout Log</h1>
+        <p class="date-label">Enter what you actually did today.</p>
+      </div>
+    </header>
+
+    <section class="card">
+      <a class="back-link" href="index.html">← Back to today’s workout</a>
+    </section>
+
+    <form id="workoutLogForm" class="card log-form">
+      <h2>Workout Details</h2>
+
+      <label class="field">
+        <span>Name</span>
+        <input id="athleteName" name="name" type="text" autocomplete="name" placeholder="First and last name" required />
+      </label>
+
+      <label class="field">
+        <span>Date</span>
+        <input id="logDate" name="date" type="date" required />
+      </label>
+
+      <div class="field">
+        <span>Group</span>
+        <div class="button-row segmented">
+          <button type="button" class="choice-btn group-choice" data-value="Sophomore">Sophomore</button>
+          <button type="button" class="choice-btn group-choice" data-value="Junior">Junior</button>
+          <button type="button" class="choice-btn group-choice" data-value="Senior">Senior</button>
+        </div>
+        <input id="groupValue" name="group" type="hidden" required />
+      </div>
+
+      <div id="plannedWorkoutBox" class="planned-box" hidden>
+        <p class="label">Planned workout</p>
+        <p id="plannedWorkoutText"></p>
+      </div>
+
+      <div class="two-col">
+        <label class="field">
+          <span>Time Run</span>
+          <input id="timeRun" name="timeRun" type="number" inputmode="decimal" min="0" step="1" placeholder="minutes" required />
+        </label>
+
+        <label class="field">
+          <span>Distance Run</span>
+          <input id="distanceRun" name="distanceRun" type="number" inputmode="decimal" min="0" step="0.01" placeholder="miles" required />
+        </label>
+      </div>
+
+      <div class="field">
+        <span>Perceived Effort</span>
+        <p class="help-text">1 = very easy, 10 = very hard</p>
+        <div class="effort-grid" id="effortGrid">
+          <button type="button" class="choice-btn effort-choice" data-value="1">1</button>
+          <button type="button" class="choice-btn effort-choice" data-value="2">2</button>
+          <button type="button" class="choice-btn effort-choice" data-value="3">3</button>
+          <button type="button" class="choice-btn effort-choice" data-value="4">4</button>
+          <button type="button" class="choice-btn effort-choice" data-value="5">5</button>
+          <button type="button" class="choice-btn effort-choice" data-value="6">6</button>
+          <button type="button" class="choice-btn effort-choice" data-value="7">7</button>
+          <button type="button" class="choice-btn effort-choice" data-value="8">8</button>
+          <button type="button" class="choice-btn effort-choice" data-value="9">9</button>
+          <button type="button" class="choice-btn effort-choice" data-value="10">10</button>
+        </div>
+        <input id="effortValue" name="effort" type="hidden" required />
+      </div>
+
+      <div class="field">
+        <span>How Did You Feel?</span>
+        <div class="button-row wrap">
+          <button type="button" class="choice-btn feel-choice" data-value="Great">Great</button>
+          <button type="button" class="choice-btn feel-choice" data-value="Good">Good</button>
+          <button type="button" class="choice-btn feel-choice" data-value="Okay">Okay</button>
+          <button type="button" class="choice-btn feel-choice" data-value="Tired">Tired</button>
+          <button type="button" class="choice-btn feel-choice" data-value="Sore">Sore</button>
+          <button type="button" class="choice-btn feel-choice" data-value="Pain / injury concern">Pain / injury concern</button>
+          <button type="button" class="choice-btn feel-choice" data-value="Sick / low energy">Sick / low energy</button>
+        </div>
+        <input id="feelValue" name="feel" type="hidden" required />
+      </div>
+
+      <div class="field">
+        <span>Strength Training?</span>
+        <div class="button-row segmented">
+          <button type="button" class="choice-btn strength-choice" data-value="Yes">Yes</button>
+          <button type="button" class="choice-btn strength-choice" data-value="No">No</button>
+        </div>
+        <input id="strengthValue" name="strength" type="hidden" required />
+      </div>
+
+      <div id="exerciseSection" class="field" hidden>
+        <span>Strength Exercises Completed</span>
+        <p class="help-text">Tap all that apply.</p>
+        <div class="exercise-grid">
+          <button type="button" class="toggle-btn exercise-choice" data-value="Goblet squat">Goblet squat</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Back squat">Back squat</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Front squat">Front squat</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Bulgarian split squat">Bulgarian split squat</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Walking lunge">Walking lunge</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Reverse lunge">Reverse lunge</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Step-up">Step-up</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Romanian deadlift">Romanian deadlift</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Deadlift / trap-bar deadlift">Deadlift / trap-bar deadlift</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Kettlebell swing">Kettlebell swing</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Hip thrust / glute bridge">Hip thrust / glute bridge</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Calf raise">Calf raise</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Single-leg calf raise">Single-leg calf raise</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Push-up">Push-up</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Bench press / DB bench">Bench press / DB bench</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="DB row">DB row</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Pull-up / assisted pull-up">Pull-up / assisted pull-up</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Military press">Military press</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Farmer carry">Farmer carry</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Plank / core">Plank / core</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Side plank">Side plank</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Dead bug">Dead bug</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Bird dog">Bird dog</button>
+          <button type="button" class="toggle-btn exercise-choice" data-value="Copenhagen plank">Copenhagen plank</button>
+        </div>
+      </div>
+
+      <label class="field">
+        <span>Notes for Coach</span>
+        <textarea id="notes" name="notes" rows="4" placeholder="Anything the coaches should know?"></textarea>
+      </label>
+
+      <button id="submitLog" class="submit-btn" type="submit">Submit Workout Log</button>
+
+      <p id="formStatus" class="form-status" role="status"></p>
+    </form>
+  </main>
+
+  <script src="log.js?v=11"></script>
+</body>
+</html>
