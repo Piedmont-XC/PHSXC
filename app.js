@@ -1,6 +1,6 @@
 // PHSXC Summer Training App v9
 // Google Sheet loader with better Google Visualization JSONP URL format + visible diagnostics.
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSUg51aK138hdtFP3yhbhM28d9Rhp2XKqjtDp9jpX-DCoH6XjIkANfpnP01BDHI6w/pub?gid=19411364&single=true&output=csv";
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTX0uda5WO10ZER3Qg-U_160YEfSaPVqP93DwWPlMnQ-YKws-dhgvQVRC_mjQExz5EW3XTXqh7Wq4eW/pubhtml?gid=19411364&single=true";
 
 const FALLBACK_WORKOUTS = [
   { Date: "2026-06-01", Sophomore: "30 min easy + mobility", Junior: "35 min easy + mobility", Senior: "40–45 min easy + mobility", Notes: "Start relaxed. This is not a fitness test." },
