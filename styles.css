@@ -1,0 +1,175 @@
+:root {
+  --bg: #f3f6fb;
+  --card: #ffffff;
+  --text: #132238;
+  --muted: #5d6b7d;
+  --brand: #123c69;
+  --brand2: #f4b942;
+  --border: #dbe4ef;
+  --shadow: 0 12px 28px rgba(18, 60, 105, 0.10);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.hero {
+  background: linear-gradient(135deg, var(--brand), #1f5b96);
+  color: white;
+  padding: 28px 20px;
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+}
+
+.eyebrow {
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+h1, h2, h3, p { margin-top: 0; }
+
+h1 { font-size: 2.05rem; margin-bottom: 8px; }
+h2 { font-size: 1.25rem; margin-bottom: 12px; }
+
+.date-label {
+  margin: 0;
+  opacity: 0.92;
+  font-size: 1rem;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 18px;
+  margin-top: 14px;
+  box-shadow: var(--shadow);
+}
+
+.button-row, .nav-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 14px;
+  font-weight: 700;
+  background: #edf3f9;
+  color: var(--brand);
+  cursor: pointer;
+}
+
+button:active { transform: scale(0.98); }
+
+.group-btn.active {
+  background: var(--brand);
+  color: white;
+}
+
+.workout-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.label {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  font-size: 0.75rem;
+  margin-bottom: 4px;
+}
+
+input[type="date"] {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  color: var(--text);
+}
+
+.workout-body {
+  border-left: 5px solid var(--brand2);
+  padding-left: 14px;
+}
+
+.workout-body .main {
+  font-size: 1.35rem;
+  line-height: 1.25;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.workout-body .details {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.nav-row {
+  margin-top: 18px;
+  justify-content: space-between;
+}
+
+.nav-row button {
+  flex: 1;
+  min-width: 115px;
+}
+
+.accordion {
+  width: 100%;
+  text-align: left;
+  margin-top: 8px;
+  border-radius: 16px;
+  background: #edf3f9;
+}
+
+.panel {
+  display: none;
+  padding: 12px 4px 4px;
+  color: var(--text);
+}
+
+.panel.open { display: block; }
+
+.panel ul {
+  padding-left: 20px;
+  line-height: 1.55;
+}
+
+.safety {
+  background: #fff8e6;
+  border-color: #f4d98d;
+}
+
+footer {
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 18px 8px 28px;
+}
+
+@media (max-width: 480px) {
+  .app { padding: 12px; }
+  .hero { border-radius: 20px; }
+  h1 { font-size: 1.75rem; }
+  .workout-head { flex-direction: column; }
+  input[type="date"] { width: 100%; }
+}
