@@ -1,4 +1,4 @@
-// PHSXC no-cache service worker cleanup v5
+// PHSXC no-cache service worker cleanup v6
 self.addEventListener("install", event => {
   self.skipWaiting();
 });
