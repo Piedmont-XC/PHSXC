@@ -1,4 +1,4 @@
-const CACHE_NAME = "phsxc-summer-v2-weight-room";
+const CACHE_NAME = "phsxc-summer-v4-purple-reordered";
 const FILES = [
   "./",
   "./index.html",
