@@ -1,63 +1,21 @@
-// PHSXC Summer Training App v8
-// This version uses Google Sheets JSONP/gviz loading when the source is a published Google Sheet.
-// That avoids browser CSV/CORS problems on GitHub Pages.
+// PHSXC Summer Training App v9
+// Google Sheet loader with better Google Visualization JSONP URL format + visible diagnostics.
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSUg51aK138hdtFP3yhbhM28d9Rhp2XKqjtDp9jpX-DCoH6XjIkANfpnP01BDHI6w/pub?gid=19411364&single=true&output=csv";
 
 const FALLBACK_WORKOUTS = [
-  {
-    Date: "2026-06-01",
-    Sophomore: "30 min easy + mobility",
-    Junior: "35 min easy + mobility",
-    Senior: "40–45 min easy + mobility",
-    Notes: "Start relaxed. This is not a fitness test."
-  },
-  {
-    Date: "2026-06-02",
-    Sophomore: "30 min easy + Open Gym A",
-    Junior: "35–40 min easy + Open Gym A",
-    Senior: "40–45 min easy + Open Gym A",
-    Notes: "Keep the run conversational. Lift with perfect form."
-  },
-  {
-    Date: "2026-06-03",
-    Sophomore: "40 min brisk walk",
-    Junior: "45–50 min brisk walk",
-    Senior: "45 min easy",
-    Notes: "Sophomores and juniors: purposeful walk, tall posture, quick arms."
-  },
-  {
-    Date: "2026-06-04",
-    Sophomore: "30–35 min easy + 4 relaxed strides",
-    Junior: "40 min easy + 4 relaxed strides",
-    Senior: "AM 35 min easy / PM 20 min easy",
-    Notes: "Strides are smooth and fast-relaxed, not sprinting."
-  },
-  {
-    Date: "2026-06-05",
-    Sophomore: "25–30 min easy + Open Gym B",
-    Junior: "35 min easy + Open Gym B",
-    Senior: "40 min easy + Open Gym B",
-    Notes: "No max lifting. Stop sets before form breaks."
-  },
-  {
-    Date: "2026-06-06",
-    Sophomore: "40–45 min easy",
-    Junior: "50–55 min easy",
-    Senior: "60 min easy",
-    Notes: "Easy long aerobic day. Finish feeling controlled."
-  },
-  {
-    Date: "2026-06-07",
-    Sophomore: "Off or 20–30 min walk",
-    Junior: "Off or 20–30 min walk",
-    Senior: "Off or 25–30 min walk",
-    Notes: "Recovery is training."
-  }
+  { Date: "2026-06-01", Sophomore: "30 min easy + mobility", Junior: "35 min easy + mobility", Senior: "40–45 min easy + mobility", Notes: "Start relaxed. This is not a fitness test." },
+  { Date: "2026-06-02", Sophomore: "30 min easy + Open Gym A", Junior: "35–40 min easy + Open Gym A", Senior: "40–45 min easy + Open Gym A", Notes: "Keep the run conversational. Lift with perfect form." },
+  { Date: "2026-06-03", Sophomore: "40 min brisk walk", Junior: "45–50 min brisk walk", Senior: "45 min easy", Notes: "Sophomores and juniors: purposeful walk, tall posture, quick arms." },
+  { Date: "2026-06-04", Sophomore: "30–35 min easy + 4 relaxed strides", Junior: "40 min easy + 4 relaxed strides", Senior: "AM 35 min easy / PM 20 min easy", Notes: "Strides are smooth and fast-relaxed, not sprinting." },
+  { Date: "2026-06-05", Sophomore: "25–30 min easy + Open Gym B", Junior: "35 min easy + Open Gym B", Senior: "40 min easy + Open Gym B", Notes: "No max lifting. Stop sets before form breaks." },
+  { Date: "2026-06-06", Sophomore: "40–45 min easy", Junior: "50–55 min easy", Senior: "60 min easy", Notes: "Easy long aerobic day. Finish feeling controlled." },
+  { Date: "2026-06-07", Sophomore: "Off or 20–30 min walk", Junior: "Off or 20–30 min walk", Senior: "Off or 25–30 min walk", Notes: "Recovery is training." }
 ];
 
 let workouts = FALLBACK_WORKOUTS;
 let selectedGroup = localStorage.getItem("phsxcGroup") || "Sophomore";
 let dataSourceLabel = GOOGLE_SHEET_CSV_URL ? "Google Sheet loading…" : "sample data";
+let loadDiagnostic = "";
 
 const datePicker = document.getElementById("datePicker");
 const todayLabel = document.getElementById("todayLabel");
@@ -77,48 +35,37 @@ function parseISODateAsLocal(iso) {
 function formatDate(iso) {
   if (!iso) return "";
   const date = parseISODateAsLocal(iso);
-  return date.toLocaleDateString(undefined, {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric"
-  });
+  return date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 }
 
 function normalizeHeader(header) {
-  return String(header || "").trim().toLowerCase().replace(/\s+/g, "");
+  return String(header || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 function normalizeDate(value) {
   if (value instanceof Date && !Number.isNaN(value.getTime())) return localISODate(value);
-
   const raw = String(value || "").trim();
   if (!raw) return "";
 
-  const iso = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-  if (iso) {
-    return `${iso[1]}-${iso[2].padStart(2, "0")}-${iso[3].padStart(2, "0")}`;
+  let m = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (m) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+
+  m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (m) {
+    let y = m[3].length === 2 ? "20" + m[3] : m[3];
+    return `${y}-${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}`;
   }
 
-  const slash = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-  if (slash) {
-    let y = slash[3];
-    if (y.length === 2) y = "20" + y;
-    return `${y}-${slash[1].padStart(2, "0")}-${slash[2].padStart(2, "0")}`;
-  }
-
-  // Google Visualization date strings can look like Date(2026,5,1)
-  const gdate = raw.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})\)$/);
-  if (gdate) {
-    const y = Number(gdate[1]);
-    const m = Number(gdate[2]) + 1;
-    const d = Number(gdate[3]);
-    return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  m = raw.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})\)$/);
+  if (m) {
+    const y = Number(m[1]);
+    const month = Number(m[2]) + 1;
+    const day = Number(m[3]);
+    return `${y}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   }
 
   const parsed = new Date(raw);
   if (!Number.isNaN(parsed.getTime())) return localISODate(parsed);
-
   return raw;
 }
 
@@ -128,11 +75,7 @@ function findWorkout(iso) {
 
 function escapeHTML(str) {
   return String(str || "").replace(/[&<>"']/g, char => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
   }[char]));
 }
 
@@ -158,7 +101,7 @@ function render() {
       <p class="details">
         Data source: ${escapeHTML(dataSourceLabel)}.<br>
         Available workout dates: ${escapeHTML(firstDate)} through ${escapeHTML(lastDate)}.<br>
-        Check the date range and the Date/Sophomore/Junior/Senior/Notes columns.
+        ${loadDiagnostic ? `<br><strong>Diagnostic:</strong> ${escapeHTML(loadDiagnostic)}` : ""}
       </p>
     `;
     return;
@@ -171,6 +114,7 @@ function render() {
     <p class="main">${escapeHTML(workout)}</p>
     <p class="details">${escapeHTML(notes)}</p>
     <p class="data-source">Source: ${escapeHTML(dataSourceLabel)}</p>
+    ${loadDiagnostic ? `<p class="data-source">Diagnostic: ${escapeHTML(loadDiagnostic)}</p>` : ""}
   `;
 }
 
@@ -178,7 +122,6 @@ function chooseInitialDate() {
   const today = localISODate();
   const first = workouts.length ? normalizeDate(workouts[0].Date) : "2026-06-01";
   const last = workouts.length ? normalizeDate(workouts[workouts.length - 1].Date) : first;
-
   if (today >= first && today <= last) return today;
   return first;
 }
@@ -190,44 +133,6 @@ function shiftDay(days) {
   render();
 }
 
-function parseCSV(text) {
-  const rows = [];
-  let current = [];
-  let value = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    const next = text[i + 1];
-
-    if (char === '"' && inQuotes && next === '"') {
-      value += '"';
-      i++;
-    } else if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === "," && !inQuotes) {
-      current.push(value);
-      value = "";
-    } else if ((char === "\n" || char === "\r") && !inQuotes) {
-      if (value || current.length) {
-        current.push(value);
-        rows.push(current);
-        current = [];
-        value = "";
-      }
-      if (char === "\r" && next === "\n") i++;
-    } else {
-      value += char;
-    }
-  }
-
-  if (value || current.length) rows.push([...current, value]);
-  if (!rows.length) return [];
-
-  const headers = rows.shift().map(h => String(h || "").trim());
-  return rowsToObjects(headers, rows);
-}
-
 function rowsToObjects(headers, rows) {
   return rows
     .filter(row => row.some(cell => String(cell || "").trim() !== ""))
@@ -235,7 +140,7 @@ function rowsToObjects(headers, rows) {
       const obj = {};
       headers.forEach((h, i) => {
         const normalized = normalizeHeader(h);
-        let key = h;
+        let key = h || `Column${i + 1}`;
 
         if (normalized === "date") key = "Date";
         if (normalized === "sophomore" || normalized === "sophomores") key = "Sophomore";
@@ -250,43 +155,51 @@ function rowsToObjects(headers, rows) {
     });
 }
 
-function getGoogleVizUrl(url) {
-  try {
-    const u = new URL(url);
-    const gid = u.searchParams.get("gid") || "0";
-    const base = url.split("/pub")[0];
-    const callback = `phsxcSheetCallback_${Date.now()}`;
-    return {
-      callback,
-      url: `${base}/gviz/tq?gid=${encodeURIComponent(gid)}&headers=1&tqx=responseHandler:${callback}`
-    };
-  } catch (err) {
-    return null;
-  }
+function getPublishedSheetParts(url) {
+  const u = new URL(url);
+  const gid = u.searchParams.get("gid") || "0";
+  const match = u.href.match(/\/spreadsheets\/d\/e\/([^/]+)/);
+  if (!match) throw new Error("Could not find published sheet id after /d/e/");
+  const id = match[1];
+  return { id, gid };
 }
 
 function loadGoogleSheetViaJSONP(url) {
   return new Promise((resolve, reject) => {
-    const info = getGoogleVizUrl(url);
-    if (!info) {
-      reject(new Error("Invalid Google Sheet URL"));
+    let parts;
+    try {
+      parts = getPublishedSheetParts(url);
+    } catch (err) {
+      reject(err);
       return;
     }
+
+    const callback = `phsxcSheetCallback_${Date.now()}`;
+    const gvizUrl =
+      `https://docs.google.com/spreadsheets/d/e/${parts.id}/gviz/tq` +
+      `?gid=${encodeURIComponent(parts.gid)}` +
+      `&headers=1` +
+      `&tq=${encodeURIComponent("select *")}` +
+      `&tqx=${encodeURIComponent(`out:json;responseHandler:${callback}`)}`;
 
     const script = document.createElement("script");
     const timeout = setTimeout(() => {
       cleanup();
-      reject(new Error("Google Sheet JSONP request timed out"));
-    }, 12000);
+      reject(new Error("Google Sheet JSONP timed out. URL tried: " + gvizUrl));
+    }, 15000);
 
     function cleanup() {
       clearTimeout(timeout);
-      delete window[info.callback];
-      script.remove();
+      delete window[callback];
+      if (script.parentNode) script.parentNode.removeChild(script);
     }
 
-    window[info.callback] = function(response) {
+    window[callback] = function(response) {
       try {
+        if (response.status === "error") {
+          throw new Error(response.errors?.map(e => e.detailed_message || e.message).join("; ") || "Google returned error");
+        }
+
         const table = response.table;
         const headers = table.cols.map(col => col.label || col.id || "");
         const rows = table.rows.map(row =>
@@ -300,6 +213,7 @@ function loadGoogleSheetViaJSONP(url) {
 
         const parsed = rowsToObjects(headers, rows);
         cleanup();
+        loadDiagnostic = `Loaded ${parsed.length} rows from Google Sheet.`;
         resolve(parsed);
       } catch (err) {
         cleanup();
@@ -309,10 +223,10 @@ function loadGoogleSheetViaJSONP(url) {
 
     script.onerror = function() {
       cleanup();
-      reject(new Error("Google Sheet JSONP script failed to load"));
+      reject(new Error("Google Sheet JSONP script failed to load. URL tried: " + gvizUrl));
     };
 
-    script.src = info.url;
+    script.src = gvizUrl;
     document.body.appendChild(script);
   });
 }
@@ -325,23 +239,16 @@ async function loadSheetData() {
   }
 
   try {
-    let parsed = [];
-
-    if (GOOGLE_SHEET_CSV_URL.includes("docs.google.com/spreadsheets")) {
-      parsed = await loadGoogleSheetViaJSONP(GOOGLE_SHEET_CSV_URL);
-    } else {
-      const res = await fetch(GOOGLE_SHEET_CSV_URL, { cache: "no-store" });
-      if (!res.ok) throw new Error(`CSV fetch failed: ${res.status}`);
-      parsed = parseCSV(await res.text());
-    }
+    const parsed = await loadGoogleSheetViaJSONP(GOOGLE_SHEET_CSV_URL);
 
     if (!parsed.length) throw new Error("Sheet returned no workout rows");
-    if (!parsed[0].Date) throw new Error("Sheet missing Date column");
+    if (!parsed[0].Date) throw new Error("Sheet missing Date column. Headers found may not be in row 1.");
 
     workouts = parsed;
     dataSourceLabel = "Google Sheet";
   } catch (err) {
     console.error("Google Sheet load failed:", err);
+    loadDiagnostic = err.message || String(err);
     dataSourceLabel = "sample data — Google Sheet could not be loaded";
     workouts = FALLBACK_WORKOUTS;
   }

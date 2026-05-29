@@ -1,8 +1,5 @@
-// PHSXC no-cache cleanup v8
-self.addEventListener("install", event => {
-  self.skipWaiting();
-});
-
+// PHSXC no-cache cleanup v9
+self.addEventListener("install", event => self.skipWaiting());
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key))))
