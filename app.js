@@ -2,7 +2,7 @@
 // To connect to Google Sheets later:
 // 1) Publish the Master Plan sheet as CSV
 // 2) Paste the CSV URL below
-const GOOGLE_SHEET_CSV_URL = "";
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSUg51aK138hdtFP3yhbhM28d9Rhp2XKqjtDp9jpX-DCoH6XjIkANfpnP01BDHI6w/pub?gid=19411364&single=true&output=csv";
 
 // Fallback sample data so the site works immediately.
 // Replace or connect to Google Sheets for the full summer plan.
