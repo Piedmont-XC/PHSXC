@@ -1,12 +1,12 @@
 :root {
-  --bg: #f3f6fb;
+  --bg: #f7f2fb;
   --card: #ffffff;
-  --text: #132238;
-  --muted: #5d6b7d;
-  --brand: #123c69;
-  --brand2: #f4b942;
-  --border: #dbe4ef;
-  --shadow: 0 12px 28px rgba(18, 60, 105, 0.10);
+  --text: #241431;
+  --muted: #6b5a78;
+  --brand: #5b2a86;
+  --brand2: #c9a7eb;
+  --border: #e5d8f1;
+  --shadow: 0 12px 28px rgba(91, 42, 134, 0.12);
 }
 
 * { box-sizing: border-box; }
@@ -25,7 +25,7 @@ body {
 }
 
 .hero {
-  background: linear-gradient(135deg, var(--brand), #1f5b96);
+  background: linear-gradient(135deg, var(--brand), #7b3fb3);
   color: white;
   padding: 28px 20px;
   border-radius: 24px;
@@ -71,7 +71,7 @@ button {
   border-radius: 999px;
   padding: 12px 14px;
   font-weight: 700;
-  background: #edf3f9;
+  background: #f0e5fa;
   color: var(--brand);
   cursor: pointer;
 }
@@ -138,7 +138,7 @@ input[type="date"] {
   text-align: left;
   margin-top: 8px;
   border-radius: 16px;
-  background: #edf3f9;
+  background: #f0e5fa;
 }
 
 .panel {
@@ -155,8 +155,8 @@ input[type="date"] {
 }
 
 .safety {
-  background: #fff8e6;
-  border-color: #f4d98d;
+  background: #fbf2ff;
+  border-color: #d8b7f0;
 }
 
 footer {
@@ -176,7 +176,7 @@ footer {
 
 
 .weight-room-card {
-  background: #f8fbff;
+  background: #fbf7ff;
 }
 
 .schedule-days {
@@ -220,3 +220,17 @@ footer {
 }
 
 .version-note { font-size: 0.75rem; opacity: 0.7; }
+
+/* Purple theme polish */
+.hero {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.group-btn.active,
+button.group-btn.active {
+  box-shadow: 0 6px 14px rgba(91, 42, 134, 0.18);
+}
+
+.workout-body {
+  border-left-color: var(--brand2);
+}
