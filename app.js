@@ -1,12 +1,10 @@
-// PHSXC Summer Training App
-// To connect to Google Sheets later:
-// 1) Publish the Master Plan sheet as CSV
-// 2) Paste the CSV URL below
-const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSUg51aK138hdtFP3yhbhM28d9Rhp2XKqjtDp9jpX-DCoH6XjIkANfpnP01BDHI6w/pub?gid=19411364&single=true&output=csv";
+// PHSXC Summer Training App v7
+// If you published your Google Sheet as CSV, paste the CSV URL below.
+// Example:
+// const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/.../pub?gid=0&single=true&output=csv";
+const GOOGLE_SHEET_CSV_URL = "";
 
-// Fallback sample data so the site works immediately.
-// Replace or connect to Google Sheets for the full summer plan.
-const fallbackWorkouts = [
+const FALLBACK_WORKOUTS = [
   {
     Date: "2026-06-01",
     Sophomore: "30 min easy + mobility",
@@ -58,8 +56,9 @@ const fallbackWorkouts = [
   }
 ];
 
-let workouts = fallbackWorkouts;
+let workouts = FALLBACK_WORKOUTS;
 let selectedGroup = localStorage.getItem("phsxcGroup") || "Sophomore";
+let dataSourceLabel = GOOGLE_SHEET_CSV_URL ? "Google Sheet" : "sample data";
 
 const datePicker = document.getElementById("datePicker");
 const todayLabel = document.getElementById("todayLabel");
@@ -71,24 +70,77 @@ function localISODate(date = new Date()) {
   return new Date(date.getTime() - tzOffset).toISOString().slice(0, 10);
 }
 
-function formatDate(iso) {
+function parseISODateAsLocal(iso) {
   const [y, m, d] = iso.split("-").map(Number);
-  const date = new Date(y, m - 1, d);
+  return new Date(y, m - 1, d);
+}
+
+function formatDate(iso) {
+  if (!iso) return "";
+  const date = parseISODateAsLocal(iso);
   return date.toLocaleDateString(undefined, {
     weekday: "long",
     month: "long",
-    day: "numeric"
+    day: "numeric",
+    year: "numeric"
   });
 }
 
+function normalizeHeader(header) {
+  return String(header || "").trim().toLowerCase().replace(/\s+/g, "");
+}
+
+function normalizeDate(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+
+  // Already ISO yyyy-mm-dd
+  const iso = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (iso) {
+    const y = iso[1];
+    const m = iso[2].padStart(2, "0");
+    const d = iso[3].padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+
+  // US style m/d/yyyy or mm/dd/yyyy
+  const slash = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (slash) {
+    let y = slash[3];
+    if (y.length === 2) y = "20" + y;
+    const m = slash[1].padStart(2, "0");
+    const d = slash[2].padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+
+  // Try Date parser as fallback
+  const parsed = new Date(raw);
+  if (!Number.isNaN(parsed.getTime())) return localISODate(parsed);
+
+  return raw;
+}
+
 function findWorkout(iso) {
-  return workouts.find(row => row.Date === iso);
+  return workouts.find(row => normalizeDate(row.Date) === iso);
+}
+
+function escapeHTML(str) {
+  return String(str || "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  }[char]));
 }
 
 function render() {
-  const iso = datePicker.value || localISODate();
-  const row = findWorkout(iso);
+  if (!datePicker || !todayLabel || !groupTitle || !workoutBody) return;
 
+  const iso = datePicker.value || chooseInitialDate();
+  datePicker.value = iso;
+
+  const row = findWorkout(iso);
   groupTitle.textContent = selectedGroup;
   todayLabel.textContent = formatDate(iso);
 
@@ -97,37 +149,43 @@ function render() {
   });
 
   if (!row) {
+    const firstDate = workouts.length ? normalizeDate(workouts[0].Date) : "unknown";
+    const lastDate = workouts.length ? normalizeDate(workouts[workouts.length - 1].Date) : "unknown";
     workoutBody.innerHTML = `
-      <p class="main">No workout found for this date.</p>
-      <p class="details">Check the date or update the Google Sheet data.</p>
+      <p class="main">No workout found for ${escapeHTML(formatDate(iso))}.</p>
+      <p class="details">
+        Data source: ${escapeHTML(dataSourceLabel)}.<br>
+        Available workout dates: ${escapeHTML(firstDate)} through ${escapeHTML(lastDate)}.<br>
+        Check that the Google Sheet has a Date column and that dates are formatted like 2026-06-01.
+      </p>
     `;
     return;
   }
 
-  const workout = row[selectedGroup] || "No workout entered.";
-  const notes = row.Notes || "";
+  const workout = row[selectedGroup] || row[selectedGroup.toLowerCase()] || "No workout entered for this group.";
+  const notes = row.Notes || row.notes || "";
 
   workoutBody.innerHTML = `
     <p class="main">${escapeHTML(workout)}</p>
     <p class="details">${escapeHTML(notes)}</p>
+    <p class="data-source">Source: ${escapeHTML(dataSourceLabel)}</p>
   `;
 }
 
+function chooseInitialDate() {
+  const today = localISODate();
+  const first = workouts.length ? normalizeDate(workouts[0].Date) : "2026-06-01";
+  const last = workouts.length ? normalizeDate(workouts[workouts.length - 1].Date) : first;
+
+  if (today >= first && today <= last) return today;
+  return first;
+}
+
 function shiftDay(days) {
-  const current = datePicker.value ? new Date(datePicker.value + "T00:00:00") : new Date();
+  const current = parseISODateAsLocal(datePicker.value || chooseInitialDate());
   current.setDate(current.getDate() + days);
   datePicker.value = localISODate(current);
   render();
-}
-
-function escapeHTML(str) {
-  return String(str).replace(/[&<>"']/g, char => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-  }[char]));
 }
 
 function parseCSV(text) {
@@ -166,60 +224,98 @@ function parseCSV(text) {
     rows.push(current);
   }
 
-  const headers = rows.shift();
-  return rows.map(row => {
-    const obj = {};
-    headers.forEach((h, i) => obj[h.trim()] = (row[i] || "").trim());
-    return obj;
-  });
+  if (!rows.length) return [];
+
+  const rawHeaders = rows.shift();
+  const headers = rawHeaders.map(h => String(h || "").trim());
+
+  return rows
+    .filter(row => row.some(cell => String(cell || "").trim() !== ""))
+    .map(row => {
+      const obj = {};
+      headers.forEach((h, i) => {
+        const normalized = normalizeHeader(h);
+        let key = h;
+
+        if (normalized === "date") key = "Date";
+        if (normalized === "sophomore" || normalized === "sophomores") key = "Sophomore";
+        if (normalized === "junior" || normalized === "juniors") key = "Junior";
+        if (normalized === "senior" || normalized === "seniors") key = "Senior";
+        if (normalized === "notes" || normalized === "coachnotes" || normalized === "note") key = "Notes";
+
+        obj[key] = (row[i] || "").trim();
+      });
+      obj.Date = normalizeDate(obj.Date);
+      return obj;
+    });
 }
 
 async function loadSheetData() {
-  if (!GOOGLE_SHEET_CSV_URL) return;
+  if (!GOOGLE_SHEET_CSV_URL) {
+    dataSourceLabel = "sample data — Google Sheet URL not connected yet";
+    return;
+  }
 
   try {
-    const res = await fetch(GOOGLE_SHEET_CSV_URL);
-    if (!res.ok) throw new Error("CSV fetch failed");
+    const res = await fetch(GOOGLE_SHEET_CSV_URL, { cache: "no-store" });
+    if (!res.ok) throw new Error(`CSV fetch failed: ${res.status}`);
     const text = await res.text();
     const parsed = parseCSV(text);
-    if (parsed.length) workouts = parsed;
+
+    if (!parsed.length) throw new Error("CSV had no rows");
+    if (!parsed[0].Date) throw new Error("CSV missing Date column");
+
+    workouts = parsed;
+    dataSourceLabel = "Google Sheet";
   } catch (err) {
-    console.warn("Using fallback data because Google Sheet could not be loaded.", err);
+    console.error(err);
+    dataSourceLabel = "sample data — Google Sheet could not be loaded";
+    workouts = FALLBACK_WORKOUTS;
   }
 }
 
-document.querySelectorAll(".group-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    selectedGroup = btn.dataset.group;
-    localStorage.setItem("phsxcGroup", selectedGroup);
+function wireEvents() {
+  document.querySelectorAll(".group-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      selectedGroup = btn.dataset.group;
+      localStorage.setItem("phsxcGroup", selectedGroup);
+      render();
+    });
+  });
+
+  document.getElementById("prevDay")?.addEventListener("click", () => shiftDay(-1));
+  document.getElementById("nextDay")?.addEventListener("click", () => shiftDay(1));
+  document.getElementById("todayBtn")?.addEventListener("click", () => {
+    datePicker.value = chooseInitialDate();
     render();
   });
-});
 
-document.getElementById("prevDay").addEventListener("click", () => shiftDay(-1));
-document.getElementById("nextDay").addEventListener("click", () => shiftDay(1));
-document.getElementById("todayBtn").addEventListener("click", () => {
-  datePicker.value = localISODate();
+  datePicker?.addEventListener("change", render);
+
+  document.querySelectorAll(".accordion").forEach(button => {
+    button.addEventListener("click", () => {
+      button.nextElementSibling.classList.toggle("open");
+    });
+  });
+}
+
+async function init() {
+  wireEvents();
+  await loadSheetData();
+  datePicker.value = chooseInitialDate();
   render();
-});
-datePicker.addEventListener("change", render);
 
-document.querySelectorAll(".accordion").forEach(button => {
-  button.addEventListener("click", () => {
-    button.nextElementSibling.classList.toggle("open");
-  });
-});
-
-);
+  // Clear old service-worker caches from earlier app versions.
+  if ("serviceWorker" in navigator) {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      registrations.forEach(registration => registration.unregister());
+      const keys = await caches.keys();
+      keys.forEach(key => caches.delete(key));
+    } catch (err) {
+      console.warn("Cache cleanup skipped.", err);
+    }
+  }
 }
 
-datePicker.value = localISODate(new Date("2026-06-01T12:00:00"));
-loadSheetData().then(render);
-
-
-// Temporarily unregister old service workers so GitHub updates display immediately.
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    registrations.forEach(registration => registration.unregister());
-  });
-}
+init();
