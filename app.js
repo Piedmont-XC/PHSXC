@@ -1,8 +1,7 @@
-// PHSXC Summer Training App v7
-// If you published your Google Sheet as CSV, paste the CSV URL below.
-// Example:
+// PHSXC Summer Training App v8
+// This version uses Google Sheets JSONP/gviz loading when the source is a published Google Sheet.
+// That avoids browser CSV/CORS problems on GitHub Pages.
 const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSUg51aK138hdtFP3yhbhM28d9Rhp2XKqjtDp9jpX-DCoH6XjIkANfpnP01BDHI6w/pub?gid=19411364&single=true&output=csv";
-// const GOOGLE_SHEET_CSV_URL = "";
 
 const FALLBACK_WORKOUTS = [
   {
@@ -58,7 +57,7 @@ const FALLBACK_WORKOUTS = [
 
 let workouts = FALLBACK_WORKOUTS;
 let selectedGroup = localStorage.getItem("phsxcGroup") || "Sophomore";
-let dataSourceLabel = GOOGLE_SHEET_CSV_URL ? "Google Sheet" : "sample data";
+let dataSourceLabel = GOOGLE_SHEET_CSV_URL ? "Google Sheet loading…" : "sample data";
 
 const datePicker = document.getElementById("datePicker");
 const todayLabel = document.getElementById("todayLabel");
@@ -91,29 +90,32 @@ function normalizeHeader(header) {
 }
 
 function normalizeDate(value) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return localISODate(value);
+
   const raw = String(value || "").trim();
   if (!raw) return "";
 
-  // Already ISO yyyy-mm-dd
   const iso = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
   if (iso) {
-    const y = iso[1];
-    const m = iso[2].padStart(2, "0");
-    const d = iso[3].padStart(2, "0");
-    return `${y}-${m}-${d}`;
+    return `${iso[1]}-${iso[2].padStart(2, "0")}-${iso[3].padStart(2, "0")}`;
   }
 
-  // US style m/d/yyyy or mm/dd/yyyy
   const slash = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
   if (slash) {
     let y = slash[3];
     if (y.length === 2) y = "20" + y;
-    const m = slash[1].padStart(2, "0");
-    const d = slash[2].padStart(2, "0");
-    return `${y}-${m}-${d}`;
+    return `${y}-${slash[1].padStart(2, "0")}-${slash[2].padStart(2, "0")}`;
   }
 
-  // Try Date parser as fallback
+  // Google Visualization date strings can look like Date(2026,5,1)
+  const gdate = raw.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})\)$/);
+  if (gdate) {
+    const y = Number(gdate[1]);
+    const m = Number(gdate[2]) + 1;
+    const d = Number(gdate[3]);
+    return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  }
+
   const parsed = new Date(raw);
   if (!Number.isNaN(parsed.getTime())) return localISODate(parsed);
 
@@ -156,14 +158,14 @@ function render() {
       <p class="details">
         Data source: ${escapeHTML(dataSourceLabel)}.<br>
         Available workout dates: ${escapeHTML(firstDate)} through ${escapeHTML(lastDate)}.<br>
-        Check that the Google Sheet has a Date column and that dates are formatted like 2026-06-01.
+        Check the date range and the Date/Sophomore/Junior/Senior/Notes columns.
       </p>
     `;
     return;
   }
 
-  const workout = row[selectedGroup] || row[selectedGroup.toLowerCase()] || "No workout entered for this group.";
-  const notes = row.Notes || row.notes || "";
+  const workout = row[selectedGroup] || "No workout entered for this group.";
+  const notes = row.Notes || "";
 
   workoutBody.innerHTML = `
     <p class="main">${escapeHTML(workout)}</p>
@@ -219,16 +221,14 @@ function parseCSV(text) {
     }
   }
 
-  if (value || current.length) {
-    current.push(value);
-    rows.push(current);
-  }
-
+  if (value || current.length) rows.push([...current, value]);
   if (!rows.length) return [];
 
-  const rawHeaders = rows.shift();
-  const headers = rawHeaders.map(h => String(h || "").trim());
+  const headers = rows.shift().map(h => String(h || "").trim());
+  return rowsToObjects(headers, rows);
+}
 
+function rowsToObjects(headers, rows) {
   return rows
     .filter(row => row.some(cell => String(cell || "").trim() !== ""))
     .map(row => {
@@ -243,32 +243,105 @@ function parseCSV(text) {
         if (normalized === "senior" || normalized === "seniors") key = "Senior";
         if (normalized === "notes" || normalized === "coachnotes" || normalized === "note") key = "Notes";
 
-        obj[key] = (row[i] || "").trim();
+        obj[key] = String(row[i] ?? "").trim();
       });
       obj.Date = normalizeDate(obj.Date);
       return obj;
     });
 }
 
+function getGoogleVizUrl(url) {
+  try {
+    const u = new URL(url);
+    const gid = u.searchParams.get("gid") || "0";
+    const base = url.split("/pub")[0];
+    const callback = `phsxcSheetCallback_${Date.now()}`;
+    return {
+      callback,
+      url: `${base}/gviz/tq?gid=${encodeURIComponent(gid)}&headers=1&tqx=responseHandler:${callback}`
+    };
+  } catch (err) {
+    return null;
+  }
+}
+
+function loadGoogleSheetViaJSONP(url) {
+  return new Promise((resolve, reject) => {
+    const info = getGoogleVizUrl(url);
+    if (!info) {
+      reject(new Error("Invalid Google Sheet URL"));
+      return;
+    }
+
+    const script = document.createElement("script");
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error("Google Sheet JSONP request timed out"));
+    }, 12000);
+
+    function cleanup() {
+      clearTimeout(timeout);
+      delete window[info.callback];
+      script.remove();
+    }
+
+    window[info.callback] = function(response) {
+      try {
+        const table = response.table;
+        const headers = table.cols.map(col => col.label || col.id || "");
+        const rows = table.rows.map(row =>
+          row.c.map(cell => {
+            if (!cell) return "";
+            if (cell.f) return cell.f;
+            if (cell.v === null || cell.v === undefined) return "";
+            return String(cell.v);
+          })
+        );
+
+        const parsed = rowsToObjects(headers, rows);
+        cleanup();
+        resolve(parsed);
+      } catch (err) {
+        cleanup();
+        reject(err);
+      }
+    };
+
+    script.onerror = function() {
+      cleanup();
+      reject(new Error("Google Sheet JSONP script failed to load"));
+    };
+
+    script.src = info.url;
+    document.body.appendChild(script);
+  });
+}
+
 async function loadSheetData() {
-  if (!GOOGLE_SHEET_CSV_URL) {
+  if (!GOOGLE_SHEET_CSV_URL || GOOGLE_SHEET_CSV_URL.includes("...")) {
     dataSourceLabel = "sample data — Google Sheet URL not connected yet";
+    workouts = FALLBACK_WORKOUTS;
     return;
   }
 
   try {
-    const res = await fetch(GOOGLE_SHEET_CSV_URL, { cache: "no-store" });
-    if (!res.ok) throw new Error(`CSV fetch failed: ${res.status}`);
-    const text = await res.text();
-    const parsed = parseCSV(text);
+    let parsed = [];
 
-    if (!parsed.length) throw new Error("CSV had no rows");
-    if (!parsed[0].Date) throw new Error("CSV missing Date column");
+    if (GOOGLE_SHEET_CSV_URL.includes("docs.google.com/spreadsheets")) {
+      parsed = await loadGoogleSheetViaJSONP(GOOGLE_SHEET_CSV_URL);
+    } else {
+      const res = await fetch(GOOGLE_SHEET_CSV_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error(`CSV fetch failed: ${res.status}`);
+      parsed = parseCSV(await res.text());
+    }
+
+    if (!parsed.length) throw new Error("Sheet returned no workout rows");
+    if (!parsed[0].Date) throw new Error("Sheet missing Date column");
 
     workouts = parsed;
     dataSourceLabel = "Google Sheet";
   } catch (err) {
-    console.error(err);
+    console.error("Google Sheet load failed:", err);
     dataSourceLabel = "sample data — Google Sheet could not be loaded";
     workouts = FALLBACK_WORKOUTS;
   }
@@ -305,7 +378,6 @@ async function init() {
   datePicker.value = chooseInitialDate();
   render();
 
-  // Clear old service-worker caches from earlier app versions.
   if ("serviceWorker" in navigator) {
     try {
       const registrations = await navigator.serviceWorker.getRegistrations();
