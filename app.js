@@ -1,8 +1,8 @@
 // PHSXC Summer Training App v7
 // If you published your Google Sheet as CSV, paste the CSV URL below.
 // Example:
-// const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/.../pub?gid=0&single=true&output=csv";
-const GOOGLE_SHEET_CSV_URL = "";
+const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/.../pub?gid=0&single=true&output=csv";
+// const GOOGLE_SHEET_CSV_URL = "";
 
 const FALLBACK_WORKOUTS = [
   {
