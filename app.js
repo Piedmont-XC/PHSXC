@@ -210,9 +210,16 @@ document.querySelectorAll(".accordion").forEach(button => {
   });
 });
 
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+);
 }
 
 datePicker.value = localISODate(new Date("2026-06-01T12:00:00"));
 loadSheetData().then(render);
+
+
+// Temporarily unregister old service workers so GitHub updates display immediately.
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(registration => registration.unregister());
+  });
+}

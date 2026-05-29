@@ -234,3 +234,26 @@ button.group-btn.active {
 .workout-body {
   border-left-color: var(--brand2);
 }
+
+/* Force purple theme v5 */
+.hero {
+  background: linear-gradient(135deg, #5b2a86, #7b3fb3);
+}
+
+.card {
+  border-color: #e5d8f1;
+}
+
+button {
+  background: #f0e5fa;
+  color: #5b2a86;
+}
+
+.group-btn.active {
+  background: #5b2a86;
+  color: #ffffff;
+}
+
+.workout-body {
+  border-left-color: #c9a7eb;
+}
