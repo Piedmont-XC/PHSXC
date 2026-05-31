@@ -554,3 +554,38 @@ input[type="date"],
 
 /* v13 bottom schedule spacing */
 .weight-room-card { margin-top: 18px; }
+
+
+/* v14 weekday display beside date picker */
+.date-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+
+.weekday-label {
+  color: var(--brand);
+  font-weight: 900;
+  font-size: 1.05rem;
+  white-space: nowrap;
+  background: #f0e5fa;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 10px 14px;
+}
+
+@media (max-width: 560px) {
+  .date-control {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .weekday-label {
+    width: 100%;
+    text-align: center;
+    padding: 9px 12px;
+  }
+}

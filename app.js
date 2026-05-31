@@ -1,4 +1,4 @@
-// PHSXC Summer Training App v13
+// PHSXC Summer Training App v14
 // Google Sheet is loaded through a Google Apps Script web app bridge.
 const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxrZU9YRCoi1giUkmyski0VrBzKpI1Tfrk--TYInwjK48yo7SCaT0I66mHbuW1Tc0Fp/exec";
 
@@ -18,6 +18,7 @@ let dataSourceLabel = GOOGLE_APPS_SCRIPT_URL ? "Google Sheet loading…" : "samp
 let loadDiagnostic = "";
 
 const datePicker = document.getElementById("datePicker");
+const weekdayLabel = document.getElementById("weekdayLabel");
 const todayLabel = document.getElementById("todayLabel");
 const groupTitle = document.getElementById("groupTitle");
 const workoutBody = document.getElementById("workoutBody");
@@ -36,6 +37,13 @@ function formatDate(iso) {
   if (!iso) return "";
   const date = parseISODateAsLocal(iso);
   return date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+}
+
+
+function formatWeekday(iso) {
+  if (!iso) return "";
+  const date = parseISODateAsLocal(iso);
+  return date.toLocaleDateString(undefined, { weekday: "long" });
 }
 
 function normalizeHeader(header) {
@@ -117,6 +125,7 @@ function render() {
   updateLogLink(iso, row);
   groupTitle.textContent = selectedGroup;
   todayLabel.textContent = formatDate(iso);
+  if (weekdayLabel) weekdayLabel.textContent = formatWeekday(iso);
 
   document.querySelectorAll(".group-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.group === selectedGroup);

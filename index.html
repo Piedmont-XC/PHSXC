@@ -7,7 +7,7 @@
   <meta name="description" content="Piedmont High School Cross Country summer training app" />
   <meta name="theme-color" content="#123c69" />
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="styles.css?v=13" />
+  <link rel="stylesheet" href="styles.css?v=14" />
 </head>
 <body>
   <main class="app">
@@ -33,7 +33,10 @@
           <p class="label">Workout</p>
           <h2 id="groupTitle">Sophomore</h2>
         </div>
-        <input id="datePicker" type="date" aria-label="Choose date" />
+        <div class="date-control">
+          <span id="weekdayLabel" class="weekday-label">Monday</span>
+          <input id="datePicker" type="date" aria-label="Choose date" />
+        </div>
       </div>
 
       <div id="workoutBody" class="workout-body"></div>
@@ -144,11 +147,11 @@
 
     <footer>
       <p>Easy means conversational. Strides are fast-relaxed, never strained. No max lifting.</p>
-      <p class="version-note">Site version: cleanup v13</p>
+      <p class="version-note">Site version: weekday display v14</p>
       
     </footer>
   </main>
 
-  <script src="app.js?v=13"></script>
+  <script src="app.js?v=14"></script>
 </body>
 </html>
