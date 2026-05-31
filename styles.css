@@ -551,3 +551,6 @@ input[type="date"],
     padding: 15px 16px;
   }
 }
+
+/* v13 bottom schedule spacing */
+.weight-room-card { margin-top: 18px; }

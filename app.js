@@ -1,4 +1,4 @@
-// PHSXC Summer Training App v11
+// PHSXC Summer Training App v13
 // Google Sheet is loaded through a Google Apps Script web app bridge.
 const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxrZU9YRCoi1giUkmyski0VrBzKpI1Tfrk--TYInwjK48yo7SCaT0I66mHbuW1Tc0Fp/exec";
 
@@ -86,11 +86,10 @@ function findWorkout(iso) {
 }
 
 function chooseInitialDate() {
-  const today = localISODate();
-  const first = workouts.length ? normalizeDate(workouts[0].Date) : "2026-06-01";
-  const last = workouts.length ? normalizeDate(workouts[workouts.length - 1].Date) : first;
-  if (today >= first && today <= last) return today;
-  return first;
+  // Always use the device's real current date.
+  // If there is no workout for that date, render() will show "No workout found"
+  // instead of jumping back to the first day of the summer plan.
+  return localISODate();
 }
 
 
@@ -124,15 +123,9 @@ function render() {
   });
 
   if (!row) {
-    const firstDate = workouts.length ? normalizeDate(workouts[0].Date) : "unknown";
-    const lastDate = workouts.length ? normalizeDate(workouts[workouts.length - 1].Date) : "unknown";
     workoutBody.innerHTML = `
       <p class="main">No workout found for ${escapeHTML(formatDate(iso))}.</p>
-      <p class="details">
-        Data source: ${escapeHTML(dataSourceLabel)}.<br>
-        Available workout dates: ${escapeHTML(firstDate)} through ${escapeHTML(lastDate)}.<br>
-        ${loadDiagnostic ? `<br><strong>Diagnostic:</strong> ${escapeHTML(loadDiagnostic)}` : ""}
-      </p>
+      <p class="details">Check the Google Sheet to make sure there is a workout row for this date.</p>
     `;
     return;
   }
@@ -143,8 +136,6 @@ function render() {
   workoutBody.innerHTML = `
     <p class="main">${escapeHTML(workout)}</p>
     <p class="details">${escapeHTML(notes)}</p>
-    <p class="data-source">Source: ${escapeHTML(dataSourceLabel)}</p>
-    ${loadDiagnostic ? `<p class="data-source">Diagnostic: ${escapeHTML(loadDiagnostic)}</p>` : ""}
   `;
 }
 
