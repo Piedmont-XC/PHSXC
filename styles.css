@@ -651,3 +651,32 @@ input[type="date"],
   border-top: 1px solid var(--border);
   color: var(--text);
 }
+
+
+/* v19 weekly workout log navigator */
+.week-nav-card {
+  background: #fbf7ff;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 14px;
+}
+
+.week-nav-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.strength-summary-box {
+  margin: 12px 0 18px;
+}
+
+.selected-day-entry {
+  border-left: 6px solid var(--brand2);
+}
+
+@media (max-width: 560px) {
+  .week-nav-buttons {
+    grid-template-columns: 1fr;
+  }
+}

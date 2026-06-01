@@ -6,7 +6,7 @@
   <title>PHSXC My Workout Log</title>
   <meta name="description" content="PHSXC athlete workout log history" />
   <meta name="theme-color" content="#5b2a86" />
-  <link rel="stylesheet" href="styles.css?v=18" />
+  <link rel="stylesheet" href="styles.css?v=19" />
 </head>
 <body>
   <main class="app">
@@ -14,7 +14,7 @@
       <div>
         <p class="eyebrow">PHSXC</p>
         <h1>My Workout Log</h1>
-        <p class="date-label">Review your summer training entries.</p>
+        <p class="date-label">Review your summer training by day, week, and summer total.</p>
       </div>
     </header>
 
@@ -37,19 +37,19 @@
         </label>
       </div>
 
-      <div class="field">
-        <span>View</span>
-        <div class="button-row wrap">
-          <button type="button" class="choice-btn view-choice selected" data-mode="thisWeek">This Week</button>
-          <button type="button" class="choice-btn view-choice" data-mode="weekOfDate">Week of Selected Date</button>
-          <button type="button" class="choice-btn view-choice" data-mode="singleDate">Selected Date Only</button>
+      <div class="week-nav-card">
+        <p class="label">Week Navigator</p>
+        <div class="week-nav-buttons">
+          <button id="prevWeekBtn" type="button" class="secondary-action">← Previous Week</button>
+          <button id="thisWeekBtn" type="button" class="submit-btn">This Week</button>
+          <button id="nextWeekBtn" type="button" class="secondary-action">Next Week →</button>
         </div>
       </div>
 
-      <label class="field" id="selectedDateField">
+      <label class="field">
         <span>Selected Date</span>
         <input id="selectedDate" type="date" />
-        <p class="help-text">For “Week of Selected Date,” choose any date in the week you want to review.</p>
+        <p class="help-text">The weekly total is Monday–Sunday for the week containing this date.</p>
       </label>
 
       <button id="showLogBtn" class="submit-btn" type="button">Show My Log</button>
@@ -62,24 +62,29 @@
 
       <div class="summary-grid">
         <div class="summary-box">
+          <p class="summary-label">Day Total</p>
+          <p id="daySummary" class="summary-value"></p>
+        </div>
+        <div class="summary-box">
+          <p class="summary-label">Weekly Total</p>
+          <p id="weekSummary" class="summary-value"></p>
+        </div>
+        <div class="summary-box">
           <p class="summary-label">Summer Total</p>
           <p id="summerSummary" class="summary-value"></p>
         </div>
-        <div class="summary-box">
-          <p class="summary-label">Selected View</p>
-          <p id="periodSummary" class="summary-value"></p>
-        </div>
-        <div class="summary-box">
-          <p class="summary-label">Strength</p>
-          <p id="strengthSummary" class="summary-value"></p>
-        </div>
       </div>
 
-      <h3 id="entriesHeading">Entries</h3>
+      <div class="summary-box strength-summary-box">
+        <p class="summary-label">Strength Summary</p>
+        <p id="strengthSummary" class="summary-value"></p>
+      </div>
+
+      <h3 id="entriesHeading">Entries This Week</h3>
       <div id="entriesList" class="entries-list"></div>
     </section>
   </main>
 
-  <script src="my-log.js?v=18"></script>
+  <script src="my-log.js?v=19"></script>
 </body>
 </html>

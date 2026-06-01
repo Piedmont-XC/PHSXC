@@ -1,4 +1,4 @@
-// PHSXC My Workout Log v18
+// PHSXC My Workout Log v19
 const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxrZU9YRCoi1giUkmyski0VrBzKpI1Tfrk--TYInwjK48yo7SCaT0I66mHbuW1Tc0Fp/exec";
 
 const firstNameEl = document.getElementById("firstName");
@@ -7,11 +7,20 @@ const selectedDateEl = document.getElementById("selectedDate");
 const statusEl = document.getElementById("logStatus");
 const resultsEl = document.getElementById("logResults");
 
-let viewMode = "thisWeek";
-
 function localISODate(date = new Date()) {
   const tzOffset = date.getTimezoneOffset() * 60000;
   return new Date(date.getTime() - tzOffset).toISOString().slice(0, 10);
+}
+
+function parseISODateAsLocal(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function shiftSelectedDate(days) {
+  const base = selectedDateEl.value ? parseISODateAsLocal(selectedDateEl.value) : new Date();
+  base.setDate(base.getDate() + days);
+  selectedDateEl.value = localISODate(base);
 }
 
 function getParam(name) {
@@ -24,12 +33,6 @@ function cleanFirstName(value) {
 
 function cleanLastInitial(value) {
   return String(value || "").trim().replace(/[^a-zA-Z]/g, "").slice(0, 1).toUpperCase();
-}
-
-function buildDisplayName(firstName, lastInitial) {
-  const first = cleanFirstName(firstName);
-  const initial = cleanLastInitial(lastInitial);
-  return initial ? `${first} ${initial}.` : first;
 }
 
 function formatNumber(value, digits = 1) {
@@ -55,7 +58,7 @@ function formatDisplayDate(isoOrText) {
   const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!m) return raw;
   const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 }
 
 function init() {
@@ -63,29 +66,31 @@ function init() {
   lastInitialEl.value = getParam("lastInitial") || localStorage.getItem("phsxcLastInitial") || "";
   selectedDateEl.value = getParam("date") || localISODate();
 
-  const requestedMode = getParam("mode");
-  if (requestedMode) setViewMode(requestedMode);
-
   lastInitialEl.addEventListener("input", event => {
     event.target.value = cleanLastInitial(event.target.value);
   });
 
-  document.querySelectorAll(".view-choice").forEach(btn => {
-    btn.addEventListener("click", () => setViewMode(btn.dataset.mode));
+  document.getElementById("prevWeekBtn").addEventListener("click", () => {
+    shiftSelectedDate(-7);
+    loadLog();
   });
 
+  document.getElementById("thisWeekBtn").addEventListener("click", () => {
+    selectedDateEl.value = localISODate();
+    loadLog();
+  });
+
+  document.getElementById("nextWeekBtn").addEventListener("click", () => {
+    shiftSelectedDate(7);
+    loadLog();
+  });
+
+  selectedDateEl.addEventListener("change", loadLog);
   document.getElementById("showLogBtn").addEventListener("click", loadLog);
 
   if (firstNameEl.value && lastInitialEl.value) {
     loadLog();
   }
-}
-
-function setViewMode(mode) {
-  viewMode = mode || "thisWeek";
-  document.querySelectorAll(".view-choice").forEach(btn => {
-    btn.classList.toggle("selected", btn.dataset.mode === viewMode);
-  });
 }
 
 function validate() {
@@ -121,14 +126,12 @@ function loadViaJSONP(payload) {
       callback,
       firstName: payload.firstName,
       lastInitial: payload.lastInitial,
-      viewMode: payload.viewMode,
       selectedDate: payload.selectedDate,
       v: Date.now().toString()
     });
 
     const scriptUrl = `${GOOGLE_APPS_SCRIPT_URL}${GOOGLE_APPS_SCRIPT_URL.includes("?") ? "&" : "?"}${params.toString()}`;
     const script = document.createElement("script");
-
     const timeout = setTimeout(() => {
       cleanup();
       reject(new Error("Request timed out. Please try again."));
@@ -168,7 +171,6 @@ async function loadLog() {
   const payload = {
     firstName,
     lastInitial,
-    viewMode,
     selectedDate: selectedDateEl.value
   };
 
@@ -192,31 +194,35 @@ function renderResults(response) {
   document.getElementById("resultsTitle").textContent = `${response.displayName}’s Workout Log`;
   document.getElementById("resultsSubtitle").textContent = response.periodLabel || "";
 
+  const day = response.dayTotals || {};
+  const week = response.weekTotals || {};
   const summer = response.summerTotals || {};
-  const period = response.periodTotals || {};
+
+  document.getElementById("daySummary").innerHTML =
+    `${formatNumber(day.minutes, 0)} min<br>${formatNumber(day.miles, 2)} mi<br>${day.entries || 0} entries`;
+
+  document.getElementById("weekSummary").innerHTML =
+    `${formatNumber(week.minutes, 0)} min<br>${formatNumber(week.miles, 2)} mi<br>${week.entries || 0} entries`;
 
   document.getElementById("summerSummary").innerHTML =
     `${formatNumber(summer.minutes, 0)} min<br>${formatNumber(summer.miles, 2)} mi<br>${summer.entries || 0} entries`;
 
-  document.getElementById("periodSummary").innerHTML =
-    `${formatNumber(period.minutes, 0)} min<br>${formatNumber(period.miles, 2)} mi<br>${period.entries || 0} entries`;
-
   document.getElementById("strengthSummary").innerHTML =
-    `${summer.strengthSessions || 0} summer sessions<br>${period.strengthSessions || 0} in selected view`;
+    `${day.strengthSessions || 0} day · ${week.strengthSessions || 0} week · ${summer.strengthSessions || 0} summer`;
 
-  const entries = response.entries || [];
+  const entries = response.weekEntries || [];
   document.getElementById("entriesHeading").textContent =
-    entries.length ? `Entries (${entries.length})` : "Entries";
+    entries.length ? `Entries This Week (${entries.length})` : "Entries This Week";
 
   const list = document.getElementById("entriesList");
   if (!entries.length) {
-    list.innerHTML = `<p class="details">No entries found for this view.</p>`;
+    list.innerHTML = `<p class="details">No entries found for this week.</p>`;
     return;
   }
 
   list.innerHTML = entries.map(entry => `
-    <article class="entry-card">
-      <h3>${escapeHTML(formatDisplayDate(entry.date))}</h3>
+    <article class="entry-card ${entry.normalizedDate === response.selectedDate ? "selected-day-entry" : ""}">
+      <h3>${escapeHTML(formatDisplayDate(entry.normalizedDate || entry.date))}</h3>
       <p class="entry-main">${formatNumber(entry.timeRun, 0)} min · ${formatNumber(entry.distanceRun, 2)} mi</p>
       <p class="entry-detail">Effort: ${escapeHTML(entry.effort || "")}/10 · Felt: ${escapeHTML(entry.feel || "")}</p>
       <p class="entry-detail">Strength: ${escapeHTML(entry.strength || "No")}${entry.entryType === "Additional" ? " · Additional Entry" : ""}</p>
