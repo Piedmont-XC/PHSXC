@@ -680,3 +680,24 @@ input[type="date"],
     grid-template-columns: 1fr;
   }
 }
+
+/* v24 button consistency fix */
+.confirmation-actions .primary-action,
+.confirmation-actions .secondary-action,
+.confirmation-actions button.secondary-action {
+  width: 100%;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.15;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.confirmation-actions button.secondary-action {
+  appearance: none;
+  -webkit-appearance: none;
+}

@@ -1,4 +1,4 @@
-// PHSXC Workout Log v19
+// PHSXC Workout Log v24
 const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxrZU9YRCoi1giUkmyski0VrBzKpI1Tfrk--TYInwjK48yo7SCaT0I66mHbuW1Tc0Fp/exec";
 
 const form = document.getElementById("workoutLogForm");
@@ -62,8 +62,8 @@ function escapeHTML(str) {
 }
 
 function initForm() {
-  document.getElementById("firstName").value = localStorage.getItem("phsxcFirstName") || "";
-  document.getElementById("lastInitial").value = localStorage.getItem("phsxcLastInitial") || "";
+  document.getElementById("firstName").value = getParam("firstName") || localStorage.getItem("phsxcFirstName") || "";
+  document.getElementById("lastInitial").value = getParam("lastInitial") || localStorage.getItem("phsxcLastInitial") || "";
   document.getElementById("logDate").value = getParam("date") || localISODate();
   setChoice(".group-choice", "groupValue", getParam("group") || localStorage.getItem("phsxcGroup") || "Sophomore");
 

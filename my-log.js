@@ -1,4 +1,4 @@
-// PHSXC My Workout Log v19
+// PHSXC My Workout Log v24
 const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxrZU9YRCoi1giUkmyski0VrBzKpI1Tfrk--TYInwjK48yo7SCaT0I66mHbuW1Tc0Fp/exec";
 
 const firstNameEl = document.getElementById("firstName");
@@ -61,32 +61,56 @@ function formatDisplayDate(isoOrText) {
   return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 }
 
+
+function updateLogWorkoutLink() {
+  const link = document.getElementById("logWorkoutFromMyLogBtn");
+  if (!link) return;
+
+  const params = new URLSearchParams({
+    date: selectedDateEl.value || localISODate(),
+    firstName: cleanFirstName(firstNameEl.value),
+    lastInitial: cleanLastInitial(lastInitialEl.value)
+  });
+
+  link.href = `log.html?${params.toString()}`;
+}
+
 function init() {
   firstNameEl.value = getParam("firstName") || localStorage.getItem("phsxcFirstName") || "";
   lastInitialEl.value = getParam("lastInitial") || localStorage.getItem("phsxcLastInitial") || "";
   selectedDateEl.value = getParam("date") || localISODate();
 
+  firstNameEl.addEventListener("input", updateLogWorkoutLink);
+
   lastInitialEl.addEventListener("input", event => {
     event.target.value = cleanLastInitial(event.target.value);
+    updateLogWorkoutLink();
   });
 
   document.getElementById("prevWeekBtn").addEventListener("click", () => {
     shiftSelectedDate(-7);
+    updateLogWorkoutLink();
     loadLog();
   });
 
   document.getElementById("thisWeekBtn").addEventListener("click", () => {
     selectedDateEl.value = localISODate();
+    updateLogWorkoutLink();
     loadLog();
   });
 
   document.getElementById("nextWeekBtn").addEventListener("click", () => {
     shiftSelectedDate(7);
+    updateLogWorkoutLink();
     loadLog();
   });
 
-  selectedDateEl.addEventListener("change", loadLog);
+  selectedDateEl.addEventListener("change", () => {
+    updateLogWorkoutLink();
+    loadLog();
+  });
   document.getElementById("showLogBtn").addEventListener("click", loadLog);
+  updateLogWorkoutLink();
 
   if (firstNameEl.value && lastInitialEl.value) {
     loadLog();
