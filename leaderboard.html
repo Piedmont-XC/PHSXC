@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PHSXC Summer Team Board</title>
+  <meta name="description" content="PHSXC summer team training board" />
+  <meta name="theme-color" content="#5b2a86" />
+  <link rel="stylesheet" href="styles.css?v=26" />
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">PHSXC</p>
+        <h1>Summer Team Board</h1>
+        <p class="date-label">Cumulative summer training totals from submitted workout logs.</p>
+      </div>
+    </header>
+
+    <section class="card">
+      <a class="back-link" href="index.html">← Back to today’s workout</a>
+    </section>
+
+    <section class="card">
+      <h2>Sort Board</h2>
+      <div class="button-row wrap">
+        <button type="button" class="choice-btn sort-choice selected" data-sort="minutes">Minutes</button>
+        <button type="button" class="choice-btn sort-choice" data-sort="miles">Miles</button>
+        <button type="button" class="choice-btn sort-choice" data-sort="gymDays">Gym Days</button>
+        <button type="button" class="choice-btn sort-choice" data-sort="loggedDays">Logged Days</button>
+      </div>
+      <p class="help-text">Gym Days counts unique dates where Strength Training was marked Yes.</p>
+      <button id="refreshBoardBtn" class="submit-btn leaderboard-refresh" type="button">Refresh Board</button>
+      <p id="leaderboardStatus" class="form-status" role="status"></p>
+    </section>
+
+    <section id="leaderboardResults" class="card confirmation-card" hidden>
+      <h2>Team Totals</h2>
+      <p id="leaderboardSubtitle" class="confirmation-message"></p>
+
+      <div class="summary-grid">
+        <div class="summary-box">
+          <p class="summary-label">Runners</p>
+          <p id="teamRunnersSummary" class="summary-value"></p>
+        </div>
+        <div class="summary-box">
+          <p class="summary-label">Team Minutes</p>
+          <p id="teamMinutesSummary" class="summary-value"></p>
+        </div>
+        <div class="summary-box">
+          <p class="summary-label">Team Miles</p>
+          <p id="teamMilesSummary" class="summary-value"></p>
+        </div>
+      </div>
+
+      <div id="leaderboardList" class="leaderboard-list"></div>
+    </section>
+  </main>
+
+  <script src="leaderboard.js?v=26"></script>
+</body>
+</html>
