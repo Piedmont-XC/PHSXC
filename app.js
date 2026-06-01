@@ -1,4 +1,4 @@
-// PHSXC Summer Training App v14
+// PHSXC Summer Training App v15
 // Google Sheet is loaded through a Google Apps Script web app bridge.
 const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxrZU9YRCoi1giUkmyski0VrBzKpI1Tfrk--TYInwjK48yo7SCaT0I66mHbuW1Tc0Fp/exec";
 

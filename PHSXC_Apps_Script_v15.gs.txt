@@ -1,0 +1,128 @@
+/**
+ * PHSXC Apps Script v15
+ * Adds duplicate check, Add Another Entry only, Entry Type, and confirmation totals.
+ */
+function doGet(e) {
+  const action = (e.parameter.action || "workouts").toLowerCase();
+  if (action === "log") return handleWorkoutLog(e);
+  return handleWorkoutData(e);
+}
+function handleWorkoutData(e) {
+  const sheetName = "Master Plan";
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(sheetName);
+  const callback = e.parameter.callback || "phsxcCallback";
+  if (!sheet) return jsonp(callback, { error: "Sheet tab not found: " + sheetName });
+  const values = sheet.getDataRange().getDisplayValues();
+  if (values.length < 2) return jsonp(callback, []);
+  const headers = values[0];
+  const rows = values.slice(1).filter(r => r.some(c => String(c).trim() !== "")).map(row => {
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = row[i]);
+    obj.Notes = obj["Coach Notes"] || obj["Notes"] || "";
+    obj.Date = obj["Date"] || "";
+    obj.Sophomore = obj["Sophomore"] || "";
+    obj.Junior = obj["Junior"] || "";
+    obj.Senior = obj["Senior"] || "";
+    return obj;
+  });
+  return jsonp(callback, rows);
+}
+function handleWorkoutLog(e) {
+  const callback = e.parameter.callback || "phsxcLogCallback";
+  if (!e.parameter.payload) return jsonp(callback, { ok:false, error:"Missing payload." });
+  let payload;
+  try { payload = JSON.parse(e.parameter.payload); }
+  catch (err) { return jsonp(callback, { ok:false, error:"Could not parse payload." }); }
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = getOrCreateWorkoutLogSheet_(ss);
+  const normalizedName = normalizeName_(payload.name);
+  const normalizedDate = normalizeDate_(payload.date);
+  const duplicateMode = String(payload.duplicateMode || "check").toLowerCase();
+  const existingCount = countExistingEntries_(sheet, normalizedName, normalizedDate);
+
+  if (existingCount > 0 && duplicateMode !== "add") {
+    return jsonp(callback, { duplicate:true, existingCount: existingCount });
+  }
+
+  const entryType = existingCount > 0 ? "Additional" : "Original";
+  sheet.appendRow([
+    new Date(), payload.date || "", payload.name || "", normalizedName, payload.group || "",
+    payload.timeRun || "", payload.distanceRun || "", payload.effort || "", payload.feel || "",
+    payload.strength || "", Array.isArray(payload.exercises) ? payload.exercises.join(", ") : (payload.exercises || ""),
+    payload.notes || "", payload.plannedWorkout || "", entryType
+  ]);
+
+  return jsonp(callback, {
+    ok:true,
+    entryType: entryType,
+    today: { timeRun: payload.timeRun || "", distanceRun: payload.distanceRun || "", effort: payload.effort || "", feel: payload.feel || "" },
+    totals: calculateTotals_(sheet, normalizedName, normalizedDate)
+  });
+}
+function getOrCreateWorkoutLogSheet_(ss) {
+  const sheetName = "Workout Log";
+  let sheet = ss.getSheetByName(sheetName);
+  const headers = ["Timestamp","Date","Name","Normalized Name","Group","Time Run","Distance Run","Perceived Effort","How Did You Feel","Strength Training?","Strength Exercises","Notes","Planned Workout","Entry Type"];
+  if (!sheet) { sheet = ss.insertSheet(sheetName); sheet.appendRow(headers); return sheet; }
+  const lastCol = Math.max(sheet.getLastColumn(), 1);
+  const existing = sheet.getRange(1,1,1,lastCol).getDisplayValues()[0];
+  headers.forEach((h, i) => { if (existing[i] !== h) sheet.getRange(1, i+1).setValue(h); });
+  return sheet;
+}
+function countExistingEntries_(sheet, normalizedName, normalizedDate) {
+  const values = sheet.getDataRange().getDisplayValues();
+  if (values.length < 2) return 0;
+  const map = getHeaderMap_(values[0]);
+  let count = 0;
+  values.slice(1).forEach(row => {
+    const rowName = normalizeName_(getCell_(row, map, "Normalized Name") || getCell_(row, map, "Name"));
+    const rowDate = normalizeDate_(getCell_(row, map, "Date"));
+    if (rowName === normalizedName && rowDate === normalizedDate) count++;
+  });
+  return count;
+}
+function calculateTotals_(sheet, normalizedName, submittedDate) {
+  const values = sheet.getDataRange().getDisplayValues();
+  const totals = { weekMinutes:0, weekMiles:0, weekEntries:0, weekStrengthSessions:0, summerMinutes:0, summerMiles:0, summerEntries:0, summerStrengthSessions:0 };
+  if (values.length < 2) return totals;
+  const map = getHeaderMap_(values[0]);
+  const submitted = parseDate_(submittedDate);
+  const weekStart = getMonday_(submitted);
+  const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
+  values.slice(1).forEach(row => {
+    const rowName = normalizeName_(getCell_(row, map, "Normalized Name") || getCell_(row, map, "Name"));
+    if (rowName !== normalizedName) return;
+    const time = parseFloat(getCell_(row, map, "Time Run")) || 0;
+    const miles = parseFloat(getCell_(row, map, "Distance Run")) || 0;
+    const strength = String(getCell_(row, map, "Strength Training?") || "").toLowerCase();
+    const rowDate = parseDate_(normalizeDate_(getCell_(row, map, "Date")));
+    totals.summerMinutes += time; totals.summerMiles += miles; totals.summerEntries += 1;
+    if (strength === "yes") totals.summerStrengthSessions += 1;
+    if (rowDate && rowDate >= weekStart && rowDate <= weekEnd) {
+      totals.weekMinutes += time; totals.weekMiles += miles; totals.weekEntries += 1;
+      if (strength === "yes") totals.weekStrengthSessions += 1;
+    }
+  });
+  return totals;
+}
+function getHeaderMap_(headers) { const map = {}; headers.forEach((h,i) => map[String(h).trim()] = i); return map; }
+function getCell_(row, map, header) { const i = map[header]; return i === undefined ? "" : (row[i] || ""); }
+function normalizeName_(name) { return String(name || "").trim().replace(/\s+/g, " ").toLowerCase(); }
+function normalizeDate_(value) {
+  const raw = String(value || "").trim(); if (!raw) return "";
+  let m = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/); if (m) return m[1]+"-"+pad2_(m[2])+"-"+pad2_(m[3]);
+  m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (m) { const y = m[3].length === 2 ? "20"+m[3] : m[3]; return y+"-"+pad2_(m[1])+"-"+pad2_(m[2]); }
+  const parsed = new Date(raw);
+  if (!isNaN(parsed.getTime())) return parsed.getFullYear()+"-"+pad2_(parsed.getMonth()+1)+"-"+pad2_(parsed.getDate());
+  return raw;
+}
+function parseDate_(iso) { const n = normalizeDate_(iso); const m = n.match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? new Date(Number(m[1]), Number(m[2])-1, Number(m[3])) : null; }
+function getMonday_(date) { const d = date ? new Date(date) : new Date(); const day = d.getDay(); const diff = d.getDate() - day + (day === 0 ? -6 : 1); return new Date(d.getFullYear(), d.getMonth(), diff); }
+function pad2_(v) { return String(v).padStart(2, "0"); }
+function jsonp(callback, data) {
+  const safe = String(callback || "callback").replace(/[^\w.$]/g, "");
+  return ContentService.createTextOutput(safe + "(" + JSON.stringify(data) + ");").setMimeType(ContentService.MimeType.JAVASCRIPT);
+}

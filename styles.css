@@ -589,3 +589,15 @@ input[type="date"],
     padding: 9px 12px;
   }
 }
+
+
+/* v15 confirmation + duplicate prompt */
+.confirmation-card { border-left: 6px solid var(--brand2); }
+.confirmation-message { color: var(--muted); font-size: 1.05rem; }
+.summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 18px 0; }
+.summary-box { background: #fbf7ff; border: 1px solid var(--border); border-radius: 18px; padding: 14px; }
+.summary-label { color: var(--muted); font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.72rem; margin-bottom: 8px; }
+.summary-value { color: var(--text); font-weight: 950; line-height: 1.35; margin-bottom: 0; }
+.confirmation-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.secondary-action { display: block; text-align: center; text-decoration: none; border-radius: 999px; padding: 14px 16px; font-weight: 900; background: #f0e5fa; color: var(--brand); border: 1px solid var(--border); }
+@media (max-width: 560px) { .summary-grid { grid-template-columns: 1fr; } .confirmation-actions { grid-template-columns: 1fr; } }

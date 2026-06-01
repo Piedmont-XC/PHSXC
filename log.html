@@ -6,7 +6,7 @@
   <title>PHSXC Workout Log</title>
   <meta name="description" content="PHSXC athlete workout log" />
   <meta name="theme-color" content="#5b2a86" />
-  <link rel="stylesheet" href="styles.css?v=14" />
+  <link rel="stylesheet" href="styles.css?v=15" />
 </head>
 <body>
   <main class="app">
@@ -143,8 +143,32 @@
 
       <p id="formStatus" class="form-status" role="status"></p>
     </form>
+
+    <section id="duplicateCard" class="card confirmation-card" hidden>
+      <h2>Workout Already Logged</h2>
+      <p id="duplicateMessage">You already logged a workout for this date.</p>
+      <div class="confirmation-actions">
+        <button id="addAnotherEntryBtn" class="submit-btn" type="button">Add Another Entry</button>
+        <button id="cancelDuplicateBtn" class="secondary-action" type="button">Cancel</button>
+      </div>
+    </section>
+
+    <section id="confirmationCard" class="card confirmation-card" hidden>
+      <h2 id="confirmationTitle">Workout Logged</h2>
+      <p id="confirmationMessage" class="confirmation-message"></p>
+      <div class="summary-grid">
+        <div class="summary-box"><p class="summary-label">Today</p><p id="todaySummary" class="summary-value"></p></div>
+        <div class="summary-box"><p class="summary-label">This Week</p><p id="weekSummary" class="summary-value"></p></div>
+        <div class="summary-box"><p class="summary-label">Summer Total</p><p id="summerSummary" class="summary-value"></p></div>
+      </div>
+      <div class="confirmation-actions">
+        <a class="primary-action" href="index.html">Back to Today’s Workout</a>
+        <button id="logAnotherBtn" class="secondary-action" type="button">Log Another Workout</button>
+      </div>
+    </section>
+
   </main>
 
-  <script src="log.js?v=14"></script>
+  <script src="log.js?v=15"></script>
 </body>
 </html>
