@@ -1,4 +1,4 @@
-// PHSXC My Workout Log v26
+// PHSXC My Workout Log v28
 const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxrZU9YRCoi1giUkmyski0VrBzKpI1Tfrk--TYInwjK48yo7SCaT0I66mHbuW1Tc0Fp/exec";
 
 const firstNameEl = document.getElementById("firstName");

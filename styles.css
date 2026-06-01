@@ -793,3 +793,12 @@ input[type="date"],
     flex: 1;
   }
 }
+
+/* v28 bottom back button on secondary pages */
+.bottom-back-card {
+  margin-top: 18px;
+}
+
+.bottom-back-link {
+  width: 100%;
+}
