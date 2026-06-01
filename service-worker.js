@@ -1,4 +1,4 @@
-// PHSXC no-cache cleanup v15
+// PHSXC no-cache cleanup v16
 self.addEventListener("install", event => self.skipWaiting());
 self.addEventListener("activate", event => {
   event.waitUntil(
