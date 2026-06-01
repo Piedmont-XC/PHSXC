@@ -802,3 +802,21 @@ input[type="date"],
 .bottom-back-link {
   width: 100%;
 }
+
+/* v29 leaderboard sort card spacing */
+.sort-choice {
+  margin-bottom: 8px;
+}
+
+#leaderboardStatus.form-status,
+#leaderboardStatus {
+  margin-top: 12px;
+}
+
+.leaderboard-refresh {
+  margin-top: 18px;
+}
+
+.card .help-text {
+  margin-top: 12px;
+}
