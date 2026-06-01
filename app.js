@@ -1,4 +1,4 @@
-// PHSXC Summer Training App v16
+// PHSXC Summer Training App v18
 // Google Sheet is loaded through a Google Apps Script web app bridge.
 const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxrZU9YRCoi1giUkmyski0VrBzKpI1Tfrk--TYInwjK48yo7SCaT0I66mHbuW1Tc0Fp/exec";
 
@@ -101,6 +101,18 @@ function chooseInitialDate() {
 }
 
 
+
+function updateMyLogLink() {
+  const link = document.getElementById("showMyLogLink");
+  if (!link) return;
+
+  const params = new URLSearchParams({
+    group: selectedGroup
+  });
+
+  link.href = `my-log.html?${params.toString()}`;
+}
+
 function updateLogLink(iso, row) {
   const link = document.getElementById("logWorkoutLink");
   if (!link) return;
@@ -123,6 +135,7 @@ function render() {
 
   const row = findWorkout(iso);
   updateLogLink(iso, row);
+  updateMyLogLink();
   groupTitle.textContent = selectedGroup;
   todayLabel.textContent = formatDate(iso);
   if (weekdayLabel) weekdayLabel.textContent = formatWeekday(iso);

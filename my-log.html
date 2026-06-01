@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PHSXC My Workout Log</title>
+  <meta name="description" content="PHSXC athlete workout log history" />
+  <meta name="theme-color" content="#5b2a86" />
+  <link rel="stylesheet" href="styles.css?v=18" />
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">PHSXC</p>
+        <h1>My Workout Log</h1>
+        <p class="date-label">Review your summer training entries.</p>
+      </div>
+    </header>
+
+    <section class="card">
+      <a class="back-link" href="index.html">← Back to today’s workout</a>
+    </section>
+
+    <section class="card log-form">
+      <h2>Find My Log</h2>
+
+      <div class="two-col">
+        <label class="field">
+          <span>First Name</span>
+          <input id="firstName" type="text" autocomplete="given-name" placeholder="Maya" required />
+        </label>
+
+        <label class="field">
+          <span>Last Initial</span>
+          <input id="lastInitial" type="text" inputmode="text" maxlength="1" placeholder="J" required />
+        </label>
+      </div>
+
+      <div class="field">
+        <span>View</span>
+        <div class="button-row wrap">
+          <button type="button" class="choice-btn view-choice selected" data-mode="thisWeek">This Week</button>
+          <button type="button" class="choice-btn view-choice" data-mode="weekOfDate">Week of Selected Date</button>
+          <button type="button" class="choice-btn view-choice" data-mode="singleDate">Selected Date Only</button>
+        </div>
+      </div>
+
+      <label class="field" id="selectedDateField">
+        <span>Selected Date</span>
+        <input id="selectedDate" type="date" />
+        <p class="help-text">For “Week of Selected Date,” choose any date in the week you want to review.</p>
+      </label>
+
+      <button id="showLogBtn" class="submit-btn" type="button">Show My Log</button>
+      <p id="logStatus" class="form-status" role="status"></p>
+    </section>
+
+    <section id="logResults" class="card confirmation-card" hidden>
+      <h2 id="resultsTitle">Workout Log</h2>
+      <p id="resultsSubtitle" class="confirmation-message"></p>
+
+      <div class="summary-grid">
+        <div class="summary-box">
+          <p class="summary-label">Summer Total</p>
+          <p id="summerSummary" class="summary-value"></p>
+        </div>
+        <div class="summary-box">
+          <p class="summary-label">Selected View</p>
+          <p id="periodSummary" class="summary-value"></p>
+        </div>
+        <div class="summary-box">
+          <p class="summary-label">Strength</p>
+          <p id="strengthSummary" class="summary-value"></p>
+        </div>
+      </div>
+
+      <h3 id="entriesHeading">Entries</h3>
+      <div id="entriesList" class="entries-list"></div>
+    </section>
+  </main>
+
+  <script src="my-log.js?v=18"></script>
+</body>
+</html>

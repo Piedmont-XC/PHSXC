@@ -1,4 +1,4 @@
-// PHSXC Workout Log v16
+// PHSXC Workout Log v18
 const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxrZU9YRCoi1giUkmyski0VrBzKpI1Tfrk--TYInwjK48yo7SCaT0I66mHbuW1Tc0Fp/exec";
 
 const form = document.getElementById("workoutLogForm");
@@ -128,6 +128,7 @@ function attachChoiceHandlers() {
     confirmationCard.hidden = true;
     form.hidden = false;
     statusEl.textContent = "";
+  updateShowMyLogAfterSubmit(payload);
   });
 }
 
@@ -243,6 +244,21 @@ function showDuplicatePrompt(response, payload) {
   const count = response.existingCount || 1;
   document.getElementById("duplicateMessage").textContent =
     `You already have ${count} workout log ${count === 1 ? "entry" : "entries"} for ${payload.date} as ${payload.displayName}. Do you want to add another entry?`;
+}
+
+
+function updateShowMyLogAfterSubmit(payload) {
+  const link = document.getElementById("showMyLogAfterSubmit");
+  if (!link || !payload) return;
+
+  const params = new URLSearchParams({
+    firstName: payload.firstName || "",
+    lastInitial: payload.lastInitial || "",
+    group: payload.group || "",
+    mode: "thisWeek"
+  });
+
+  link.href = `my-log.html?${params.toString()}`;
 }
 
 function showConfirmation(response, payload) {
