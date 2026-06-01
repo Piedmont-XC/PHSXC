@@ -701,3 +701,13 @@ input[type="date"],
   appearance: none;
   -webkit-appearance: none;
 }
+
+/* v25 My Log: Log A Workout button */
+.log-a-workout-action {
+  margin-top: 12px;
+  width: 100%;
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
