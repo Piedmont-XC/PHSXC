@@ -1,0 +1,30 @@
+/* PHS logo on Summer Training main card/header v30 */
+
+.hero-with-logo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.hero-text {
+  min-width: 0;
+}
+
+.hero-logo {
+  width: 92px;
+  height: auto;
+  flex-shrink: 0;
+  border-radius: 18px;
+}
+
+@media (max-width: 480px) {
+  .hero-with-logo {
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hero-logo {
+    width: 72px;
+  }
+}
