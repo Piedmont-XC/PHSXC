@@ -6,19 +6,16 @@
   <title>PHSXC Summer Team Board</title>
   <meta name="description" content="PHSXC summer team training board" />
   <meta name="theme-color" content="#5b2a86" />
-  <link rel="stylesheet" href="styles.css?v=29" />
-  <link rel="stylesheet" href="logo.css?v=31" />
+  <link rel="stylesheet" href="styles.css?v=30" />
 </head>
 <body>
   <main class="app">
-    <header class="hero hero-with-logo">
-      <div class="hero-text">
+    <header class="hero">
+      <div>
         <p class="eyebrow">PHSXC</p>
         <h1>Summer Team Board</h1>
         <p class="date-label">Cumulative summer training totals from submitted workout logs.</p>
       </div>
-
-      <img class="hero-logo" src="assets/PHS-logo.png" alt="Piedmont High School logo" />
     </header>
 
     <section class="card">
@@ -36,6 +33,19 @@
       <p class="help-text">Gym Days counts unique dates where Strength Training was marked Yes.</p>
       <button id="refreshBoardBtn" class="submit-btn leaderboard-refresh" type="button">Refresh Board</button>
       <p id="leaderboardStatus" class="form-status" role="status"></p>
+    </section>
+
+
+    <section class="card coach-view-card">
+      <h2>Coach View</h2>
+      <p class="details">Unlock coach view to tap a runner and review their submitted workout log.</p>
+      <label class="field">
+        <span>Coach Code</span>
+        <input id="coachCodeInput" type="password" placeholder="Enter coach code" autocomplete="off" />
+      </label>
+      <button id="unlockCoachViewBtn" class="submit-btn" type="button">Unlock Coach View</button>
+      <button id="lockCoachViewBtn" class="secondary-action" type="button" hidden>Lock Coach View</button>
+      <p id="coachViewStatus" class="form-status" role="status"></p>
     </section>
 
     <section id="leaderboardResults" class="card confirmation-card" hidden>
@@ -66,6 +76,6 @@
 
   </main>
 
-  <script src="leaderboard.js?v=29"></script>
+  <script src="leaderboard.js?v=30"></script>
 </body>
 </html>

@@ -820,3 +820,9 @@ input[type="date"],
 .card .help-text {
   margin-top: 12px;
 }
+
+/* v30 coach view */
+.coach-view-card { border-left: 6px solid var(--brand2); }
+.coach-clickable { cursor: pointer; transition: transform 0.12s ease, box-shadow 0.12s ease; }
+.coach-clickable:active { transform: scale(0.99); }
+.coach-clickable:hover { box-shadow: 0 10px 24px rgba(91, 42, 134, 0.12); }
